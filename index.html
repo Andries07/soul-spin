@@ -2,15 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
+  <!-- KIOSK: lock scaling so it stays one-screen on tablet -->
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
   <title>Chicken Licken • Soul Spin</title>
   <link rel="stylesheet" href="styles.css"/>
 </head>
 <body>
-  <div class="app bg-watermark">
+  <div class="app matrixBg">
+
+    <!-- SCREEN 1: Start screen (one big button) -->
     <section id="screenStart" class="screen screenStart">
       <div class="startCard">
-        <div class="brandRow">
+        <div class="startHeader">
+          <!-- CHANGE LOGO HERE -->
           <img class="logoImg" src="img/cl-logo.png" alt="Chicken Licken"/>
           <div>
             <div class="brandTitle">SOUL SPIN</div>
@@ -18,19 +22,23 @@
           </div>
         </div>
 
-        <div class="startBig">
-          Spend the target amount and spin for prizes.
+        <div class="startText">
+          Spend the target amount, enter your details, and spin for prizes.
         </div>
 
-        <button class="primaryBtn" id="btnEnter">SPIN THE WHEEL</button>
+        <button class="primaryBtn bigBtn" id="btnEnter">SPIN THE WHEEL</button>
 
-        <div class="smallNote">
+        <div class="startFinePrint">
           In-store only • Receipt required • POPIA + marketing consent required
         </div>
+
+        <!-- Device label (so you can see which tablet is which) -->
+        <div class="deviceBadge" id="deviceBadgeStart">Device: …</div>
       </div>
     </section>
 
-    <section id="screenPlay" class="screen hidden">
+    <!-- SCREEN 2: Play screen (form + wheel on one page) -->
+    <section id="screenPlay" class="screen screenPlay hidden">
       <header class="topbar">
         <div class="topLeft">
           <img class="topLogo" src="img/cl-logo.png" alt="CL"/>
@@ -39,53 +47,114 @@
             <div class="storeTarget" id="storeTarget">Target: R—</div>
           </div>
         </div>
-        <button class="ghostBtn" id="btnBack">Back</button>
+
+        <div class="topRight">
+          <!-- Device label (so you can track device usage) -->
+          <div class="deviceBadge" id="deviceBadgePlay">Device: …</div>
+          <button class="ghostBtn" id="btnBack">Back</button>
+        </div>
       </header>
 
-      <main class="content">
-        <div class="card formCard">
-          <div class="cardTitle">Enter your details to spin</div>
-          <div class="grid">
-            <label>Name <input type="text" id="wName" autocomplete="off"></label>
-            <label>Surname <input type="text" id="wSurname" autocomplete="off"></label>
-            <label>Email <input type="email" id="wEmail" autocomplete="off"></label>
-            <label>Phone <input type="tel" id="wPhone" autocomplete="off" placeholder="0812345678"></label>
-            <label>Receipt # <input type="text" id="wReceipt" autocomplete="off"></label>
-            <label>Basket Amount (R) <input type="number" id="wAmount" min="0" step="1"></label>
-            <label>Cashier PIN <input type="password" id="wPin"></label>
+      <main class="panel">
+        <div class="card kioskCard">
+          <div class="cardHeader">
+            <div>
+              <div class="cardTitle">Enter your details</div>
+              <div class="cardSub" id="cardSubText">Complete the form to unlock the spin button.</div>
+            </div>
+            <div class="tinyNote">Receipt + staff PIN required</div>
           </div>
 
-          <label class="check">
-            <input type="checkbox" id="wPopia">
-            <span>I consent (POPIA) for prize notifications and audits.</span>
-          </label>
+          <div class="kioskBody">
+            <!-- FORM SIDE -->
+            <div class="formSide">
+              <div class="grid">
+                <label>
+                  Name
+                  <input type="text" id="wName" autocomplete="off">
+                </label>
 
-          <label class="check">
-            <input type="checkbox" id="wMarketing">
-            <span>I agree to receive marketing from Chicken Licken.</span>
-          </label>
+                <label>
+                  Surname
+                  <input type="text" id="wSurname" autocomplete="off">
+                </label>
 
-          <div class="hint" id="wheelMsg"></div>
+                <label>
+                  Email
+                  <input type="email" id="wEmail" autocomplete="off">
+                </label>
 
-          <button id="spinBtn" class="primaryBtn" onclick="spin()" disabled>SPIN</button>
+                <label>
+                  Phone
+                  <input type="tel" id="wPhone" autocomplete="off" placeholder="0812345678">
+                </label>
 
-          <div class="smallNote">
-            Keep your receipt. For big draws, drop your receipt in the in-store draw box.
-          </div>
-        </div>
+                <label>
+                  Receipt #
+                  <input type="text" id="wReceipt" autocomplete="off">
+                </label>
 
-        <div class="wheelZone">
-          <div class="pointer"></div>
+                <label>
+                  Basket Amount (R)
+                  <input type="number" id="wAmount" min="0" step="1">
+                </label>
 
-          <div class="wheelShell">
-            <svg id="wheelSvg" viewBox="0 0 400 400" class="wheelSvg"></svg>
-            <div class="wheelHub"><div class="hubInner">SOUL<br>SPIN</div></div>
-          </div>
+                <label>
+                  Cashier PIN
+                  <input type="password" id="wPin">
+                </label>
+              </div>
 
-          <div class="stand">
-            <div class="standTop"></div>
-            <div class="standBody"></div>
-            <div class="standBase"></div>
+              <label class="check">
+                <input type="checkbox" id="wPopia">
+                <span>I consent (POPIA) for prize notifications and audits.</span>
+              </label>
+
+              <label class="check">
+                <input type="checkbox" id="wMarketing">
+                <span>I agree to receive marketing from Chicken Licken.</span>
+              </label>
+
+              <!-- Inline validation message -->
+              <div class="hint" id="wheelMsg"></div>
+
+              <div class="smallNote">
+                Keep your receipt. For big draws, drop your receipt in the in-store draw box.
+              </div>
+            </div>
+
+            <!-- WHEEL SIDE -->
+            <div class="wheelSide">
+              <div class="wheelWrap">
+                <div class="pointer"></div>
+
+                <div class="wheelShell">
+                  <!-- We rotate this DIV so the wheel always spins reliably -->
+                  <div id="wheelRotator" class="wheelRotator">
+                    <svg id="wheelSvg" viewBox="0 0 400 400" class="wheelSvg"></svg>
+                  </div>
+
+                  <!-- Center button ON THE WHEEL (requested) -->
+                  <!-- This becomes enabled only when the form is valid -->
+                  <button id="wheelSpinBtn" class="wheelCenterBtn" onclick="spin()" disabled>
+                    SPIN
+                  </button>
+                </div>
+
+                <div class="stand">
+                  <div class="standTop"></div>
+                  <div class="standBody"></div>
+                  <div class="standBase"></div>
+                </div>
+
+                <div class="wheelTip" id="wheelTipText">
+                  Tip: Bigger baskets = more spins.
+                </div>
+              </div>
+
+              <!-- Secondary button (optional). Keep it hidden if you want ONLY center button. -->
+              <button id="spinBtn" class="primaryBtn hidden" onclick="spin()" disabled>SPIN</button>
+            </div>
           </div>
         </div>
       </main>
@@ -93,6 +162,7 @@
       <footer class="foot">In-store use only • T&Cs apply</footer>
     </section>
 
+    <!-- RESULT MODAL -->
     <div id="modal" class="overlay hidden">
       <div class="modal">
         <h3 id="mTitle">Result</h3>
@@ -102,6 +172,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=10"></script>
+  <script src="app.js?v=30"></script>
 </body>
 </html>
