@@ -260,7 +260,7 @@ function drawWheel(prizes){
 
   const pImg = document.createElementNS('http://www.w3.org/2000/svg','image');
   // CHANGE THIS IF YOUR LOGO FILE NAME CHANGES
-  pImg.setAttributeNS(null,'href','img/cl-logo.png');
+  pImg.setAttributeNS(null,'href','img/cl-logo.jpg');
   pImg.setAttribute('x','0'); pImg.setAttribute('y','0');
   pImg.setAttribute('width','78'); pImg.setAttribute('height','78');
   pImg.setAttribute('opacity','0.20'); // CHANGE LOGO OVERLAY OPACITY HERE
