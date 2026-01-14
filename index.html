@@ -6,10 +6,8 @@
   <title>Chicken Licken Soul Spin</title>
   <style>
     :root{
-      /* Brand vibe */
       --bg0:#07080c;
       --bg1:#0b0d14;
-      --card:rgba(255,255,255,.07);
       --stroke:rgba(255,255,255,.12);
       --muted:rgba(255,255,255,.72);
       --text:#fff;
@@ -24,11 +22,10 @@
       --shadow:0 18px 50px rgba(0,0,0,.60);
       --font:system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 
-      /* A9 portrait: keep everything on one screen */
       --pad:12px;
       --gap:10px;
 
-      /* Wheel size: MUST not dominate */
+      /* Wheel bounded so it cannot dominate */
       --wheel: clamp(210px, 30vh, 280px);
       --centerBtn: clamp(74px, 10vh, 90px);
     }
@@ -43,7 +40,6 @@
         linear-gradient(180deg, var(--bg1), var(--bg0));
     }
 
-    /* “Matrix” pattern overlay like your kiosks */
     .matrix{
       position:fixed; inset:0; pointer-events:none;
       background:
@@ -74,13 +70,35 @@
       box-shadow:var(--shadow);
     }
 
-    .brand{
-      display:flex; align-items:center; gap:10px; min-width:0;
+    .brand{ display:flex; align-items:center; gap:10px; min-width:0; }
+
+    /* Logo + fallback */
+    .logoWrap{
+      width:44px; height:44px;
+      border-radius:14px;
+      display:grid;
+      place-items:center;
+      background: rgba(0,0,0,.25);
+      border:1px solid rgba(255,255,255,.12);
+      overflow:hidden;
+      flex:0 0 auto;
+      box-shadow: 0 10px 18px rgba(0,0,0,.45);
     }
     .logo{
-      width:44px; height:44px; object-fit:contain;
-      filter: drop-shadow(0 10px 18px rgba(0,0,0,.55));
+      width:44px; height:44px;
+      object-fit:contain;
+      display:block;
     }
+    .logoFallback{
+      width:44px; height:44px;
+      display:none;
+      place-items:center;
+      font-weight:1000;
+      letter-spacing:.8px;
+      color:#111;
+      background: linear-gradient(180deg, var(--orange), #ff7d24);
+    }
+
     .brandText{ min-width:0; }
     .brandTitle{
       font-weight:1000;
@@ -102,7 +120,6 @@
     .dot{ width:10px; height:10px; border-radius:50%; background:var(--bad); box-shadow:0 0 0 4px rgba(255,59,48,.18); }
     .pillText{ font-size:12px; color:var(--muted); }
 
-    /* MAIN LAYOUT: one “super card” so it looks clean */
     .shell{
       flex:1 1 auto;
       min-height:0;
@@ -122,18 +139,9 @@
       justify-content:space-between;
       gap:10px;
     }
-    .shellTitle{
-      font-weight:1000;
-      letter-spacing:.3px;
-      font-size:14px;
-    }
-    .shellMeta{
-      font-size:11px;
-      color:var(--muted);
-      text-align:right;
-    }
+    .shellTitle{ font-weight:1000; letter-spacing:.3px; font-size:14px; }
+    .shellMeta{ font-size:11px; color:var(--muted); text-align:right; }
 
-    /* Two compact cards inside the shell: form top, wheel bottom */
     .grid{
       flex:1 1 auto;
       min-height:0;
@@ -149,7 +157,6 @@
       padding:10px;
     }
 
-    /* FORM CARD: scroll only inside the form area if needed */
     .formCard{
       flex:1 1 auto;
       min-height:0;
@@ -202,52 +209,36 @@
     .hint{ font-size:10.5px; color:rgba(255,255,255,.65); margin-top:-2px; }
     .err{ font-size:10.5px; color:var(--bad); min-height:14px; }
 
+    /* Consent now full-width underneath PIN */
+    .consentBlock{
+      margin-top:4px;
+      padding:10px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+    }
     .checks{
       display:flex;
       flex-direction:column;
       gap:8px;
-      padding-top:2px;
     }
     .chk{
       display:flex;
-      align-items:center;
+      align-items:flex-start;
       gap:10px;
       font-size:11px;
       color:var(--muted);
+      line-height:1.2;
     }
-    .chk input{ width:auto; height:auto; }
+    .chk input{ width:auto; height:auto; margin-top:2px; }
 
     .actionRow{
       display:flex;
       gap:10px;
       align-items:center;
     }
-    .cta{
-      height:46px;
-      border:none;
-      border-radius:16px;
-      padding:0 14px;
-      background: linear-gradient(180deg, var(--orange), #ff7d24);
-      color:#111;
-      font-weight:1000;
-      letter-spacing:.4px;
-      cursor:pointer;
-      display:flex;
-      align-items:center;
-      gap:10px;
-      flex:0 0 auto;
-    }
-    .cta:disabled{ opacity:.45; cursor:not-allowed; }
-    .ctaSmall{
-      height:42px;
-      border:none;
-      border-radius:14px;
-      padding:0 12px;
-      background: rgba(255,255,255,.10);
-      color:#fff;
-      font-weight:900;
-      cursor:pointer;
-    }
+
+    /* Removed external buttons. Only center wheel button remains. */
     .statusText{
       font-size:11px;
       color:var(--muted);
@@ -256,7 +247,6 @@
     }
     .statusText b{ color:var(--orange); }
 
-    /* WHEEL CARD: compact and proportional */
     .wheelCard{
       flex:0 0 auto;
       display:flex;
@@ -281,13 +271,14 @@
       padding:6px 0;
     }
 
+    /* FIX: pointer now points DOWN into the wheel (previously wrong direction) */
     .pointer{
       position:absolute;
       top:-2px;
       width:0; height:0;
       border-left:14px solid transparent;
       border-right:14px solid transparent;
-      border-bottom:22px solid var(--yellow);
+      border-top:22px solid var(--yellow); /* DOWNWARD pointer */
       filter: drop-shadow(0 8px 14px rgba(0,0,0,.6));
       z-index:5;
     }
@@ -312,7 +303,6 @@
 
     svg{ width:var(--wheel); height:var(--wheel); display:block; }
 
-    /* Spin button inside wheel */
     .centerSpin{
       position:absolute;
       width:var(--centerBtn);
@@ -330,6 +320,7 @@
       text-align:center;
       line-height:1.05;
       box-shadow: 0 12px 24px rgba(0,0,0,.55);
+      user-select:none;
     }
     .centerSpin:disabled{ opacity:.5; cursor:not-allowed; }
 
@@ -342,7 +333,6 @@
     .footLeft{ font-size:11px; font-weight:1000; color:var(--orange); }
     .footRight{ font-size:10.5px; color:rgba(255,255,255,.65); line-height:1.2; text-align:right; }
 
-    /* Modal */
     .modal{
       position:fixed; inset:0;
       display:flex; align-items:center; justify-content:center;
@@ -375,7 +365,10 @@
   <div class="app">
     <header class="topbar">
       <div class="brand">
-        <img class="logo" src="img/cl-logo.png" alt="Chicken Licken" />
+        <div class="logoWrap">
+          <img class="logo" id="logoImg" src="img/cl-logo.png" alt="Chicken Licken" />
+          <div class="logoFallback" id="logoFallback">CL</div>
+        </div>
         <div class="brandText">
           <div class="brandTitle" id="storeName">Chicken Licken Soul Spin</div>
           <div class="brandSub">Qualify at <b id="qualText">R0+</b> and spin</div>
@@ -442,28 +435,25 @@
               </div>
             </div>
 
-            <div class="row2">
-              <div class="field">
-                <label>Staff PIN</label>
-                <input id="wPin" placeholder="****" inputmode="numeric" autocomplete="off"/>
-                <div class="hint">Ask cashier for today’s PIN</div>
-              </div>
-              <div class="field">
-                <label>Consent</label>
-                <div class="checks">
-                  <label class="chk"><input type="checkbox" id="wPopia"/> I consent to POPIA processing</label>
-                  <label class="chk"><input type="checkbox" id="wMarketing"/> I agree to receive marketing</label>
-                </div>
+            <!-- PIN first -->
+            <div class="field">
+              <label>Staff PIN</label>
+              <input id="wPin" placeholder="****" inputmode="numeric" autocomplete="off"/>
+              <div class="hint">Ask cashier for today’s PIN</div>
+            </div>
+
+            <!-- Consent underneath PIN (fixed) -->
+            <div class="consentBlock">
+              <div class="checks">
+                <label class="chk"><input type="checkbox" id="wPopia"/> <span>I consent to POPIA processing</span></label>
+                <label class="chk"><input type="checkbox" id="wMarketing"/> <span>I agree to receive marketing</span></label>
               </div>
             </div>
           </div>
 
+          <!-- Buttons removed: only status remains -->
           <div class="actionRow">
-            <button class="cta" id="spinBtn" disabled>
-              <span style="font-size:18px;">⟳</span> SPIN NOW
-            </button>
             <div class="statusText" id="spinStatus">Loading store rules…</div>
-            <button class="ctaSmall" id="clearBtn" type="button">Clear</button>
           </div>
         </section>
 
@@ -513,9 +503,17 @@
       const m = new RegExp(`[?&]${name}=([^&]+)`, "i").exec(location.search);
       return m ? decodeURIComponent(m[1]) : null;
     }
-    function sanitizePhone(raw){ return String(raw||"").replace(/\\D+/g,""); }
-    function isValidPhone10(d){ return /^\\d{10}$/.test(d); }
-    function isValidEmail(e){ return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(String(e||"").trim()); }
+    function sanitizePhone(raw){ return String(raw||"").replace(/\D+/g,""); }
+
+    /* Slightly stricter but still normal email validation */
+    function normalizeEmail(e){ return String(e||"").trim().toLowerCase(); }
+    function isValidEmail(e){
+      e = normalizeEmail(e);
+      if(!e.includes("@")) return false;
+      if(e.startsWith("@") || e.endsWith("@")) return false;
+      if(e.includes("..")) return false;
+      return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e);
+    }
 
     function openModal(title, body){
       $("mTitle").innerText = title;
@@ -586,18 +584,17 @@
     let wheelRotation = 0;
 
     document.addEventListener("DOMContentLoaded", async () => {
+      // Logo fallback if image not found
+      const logo = $("logoImg");
+      logo.addEventListener("error", () => {
+        logo.style.display = "none";
+        $("logoFallback").style.display = "grid";
+      });
+
       $("deviceName").innerText = DEVICE_ID;
       $("storeIdLabel").innerText = STORE_ID || "-";
       $("mOk").addEventListener("click", closeModal);
       $("centerSpin").addEventListener("click", spin);
-      $("spinBtn").addEventListener("click", spin);
-
-      $("clearBtn").addEventListener("click", () => {
-        ["wName","wSurname","wEmail","wPhone","wReceipt","wAmount","wPin"].forEach(id => $(id).value="");
-        $("wPopia").checked=false;
-        $("wMarketing").checked=false;
-        validateAndUpdate();
-      });
 
       drawWheelFallback();
       wireValidation();
@@ -650,8 +647,13 @@
       const ids = ["wName","wSurname","wEmail","wPhone","wReceipt","wAmount","wPin","wPopia","wMarketing"];
       ids.forEach(id => {
         const el = $(id);
+
         el.addEventListener(el.type==="checkbox" ? "change" : "input", () => {
-          if(id==="wPhone") el.value = sanitizePhone(el.value);
+          if(id==="wPhone"){
+            // Hard limit to 10 digits, strip non-digits
+            const digits = sanitizePhone(el.value).slice(0,10);
+            el.value = digits;
+          }
           validateAndUpdate();
         });
       });
@@ -663,8 +665,8 @@
 
       const name = $("wName").value.trim();
       const surname = $("wSurname").value.trim();
-      const email = $("wEmail").value.trim();
-      const phone = sanitizePhone($("wPhone").value);
+      const email = normalizeEmail($("wEmail").value);
+      const phone = sanitizePhone($("wPhone").value).slice(0,10);
       const receipt = $("wReceipt").value.trim();
       const amount = Number($("wAmount").value || 0);
       const pin = $("wPin").value.trim();
@@ -673,56 +675,48 @@
 
       if(!CFG){
         setStatus("Loading store rules…", false);
-        $("spinBtn").disabled = true;
         $("centerSpin").disabled = true;
         return;
       }
 
       if(!name || !surname || !email || !phone || !receipt || !amount || !pin){
         setStatus("Complete all fields to unlock SPIN", false);
-        $("spinBtn").disabled = true;
         $("centerSpin").disabled = true;
         return;
       }
 
       if(!isValidEmail(email)){
-        $("errEmail").innerText = "Enter a valid email.";
+        $("errEmail").innerText = "Enter a valid email (must include @ and domain).";
         setStatus("Fix email to continue", false);
-        $("spinBtn").disabled = true;
         $("centerSpin").disabled = true;
         return;
       }
 
-      if(!isValidPhone10(phone)){
+      if(phone.length !== 10){
         $("errPhone").innerText = "Phone must be exactly 10 digits.";
         setStatus("Fix phone to continue", false);
-        $("spinBtn").disabled = true;
         $("centerSpin").disabled = true;
         return;
       }
 
       if(!popia || !marketing){
         setStatus("POPIA + marketing consent required", false);
-        $("spinBtn").disabled = true;
         $("centerSpin").disabled = true;
         return;
       }
 
       if(amount < Number(CFG.store.qualifyAmount)){
         setStatus(`Not qualified. Minimum R${CFG.store.qualifyAmount}`, false);
-        $("spinBtn").disabled = true;
         $("centerSpin").disabled = true;
         return;
       }
 
-      setStatus("Ready. Tap SPIN!", true);
-      $("spinBtn").disabled = false;
+      setStatus("Ready. Tap the center button to spin!", true);
       $("centerSpin").disabled = false;
     }
 
     function setStatus(msg, ok){
-      $("spinStatus").innerHTML = ok ? `<b>${msg}</b>` : msg;
-      $("spinStatus").style.color = ok ? "#34c759" : "rgba(255,255,255,.72)";
+      $("spinStatus").innerHTML = ok ? `<b style="color:#34c759">${msg}</b>` : msg;
       $("wheelSub").innerText = ok ? "Tap the center button to spin" : "Fill details to unlock";
     }
 
@@ -751,10 +745,6 @@
       drawWheel(wedges);
     }
 
-    /* WEDGE IMAGES LATER:
-       Put a PUBLIC URL into Prizes.ImageURL in your Google Sheet.
-       That image will render in that wedge.
-    */
     function drawWheel(wedges){
       const svg = $("wheelSvg");
       svg.innerHTML = "";
@@ -762,7 +752,6 @@
       const n=10, cx=200, cy=200, r=190;
       const step=(Math.PI*2)/n;
 
-      // Brand alternating wedges
       const fills = ["#ff6a00","#10131b","#ff6a00","#10131b","#ff6a00","#10131b","#ff6a00","#10131b","#e5392d","#10131b"];
 
       for(let i=0;i<n;i++){
@@ -778,7 +767,6 @@
 
         const label = (wedges[i]?.name || "TRY AGAIN");
         const imgUrl = (wedges[i]?.imageUrl || "").trim();
-        const textColor = "#fff";
         const mid=(start+end)/2;
 
         if(imgUrl){
@@ -806,7 +794,7 @@
         text.setAttribute("dominant-baseline","middle");
         text.setAttribute("font-size","11");
         text.setAttribute("font-weight","1000");
-        text.setAttribute("fill",textColor);
+        text.setAttribute("fill","#fff");
 
         const rot=(mid*180/Math.PI)+90;
         text.setAttribute("transform",`rotate(${rot} ${tx} ${ty})`);
@@ -831,7 +819,6 @@
         svg.appendChild(text);
       }
 
-      // Outer ring
       const ring = document.createElementNS("http://www.w3.org/2000/svg","circle");
       ring.setAttribute("cx",cx); ring.setAttribute("cy",cy); ring.setAttribute("r","192");
       ring.setAttribute("fill","none");
@@ -839,7 +826,6 @@
       ring.setAttribute("stroke-width","4");
       svg.appendChild(ring);
 
-      // Center ring
       const center = document.createElementNS("http://www.w3.org/2000/svg","circle");
       center.setAttribute("cx",cx); center.setAttribute("cy",cy); center.setAttribute("r","78");
       center.setAttribute("fill","rgba(0,0,0,.25)");
@@ -857,15 +843,16 @@
 
     async function spin(){
       if(spinning) return;
-      if($("spinBtn").disabled) return;
+      if($("centerSpin").disabled) return;
 
       spinning = true;
-      $("spinBtn").disabled = true;
       $("centerSpin").disabled = true;
 
       // Instant spin UI
       wheelRotation += (6*360) + Math.random()*360;
       $("wheelRotator").style.transform = `rotate(${wheelRotation}deg)`;
+
+      const email = normalizeEmail($("wEmail").value);
 
       const resPromise = apiJSONP({
         action: "spin",
@@ -875,8 +862,8 @@
 
         name: $("wName").value.trim(),
         surname: $("wSurname").value.trim(),
-        email: $("wEmail").value.trim(),
-        phone: sanitizePhone($("wPhone").value),
+        email: email,
+        phone: sanitizePhone($("wPhone").value).slice(0,10),
         receiptNumber: $("wReceipt").value.trim(),
         basketAmount: Number($("wAmount").value || 0),
 
@@ -902,7 +889,7 @@
           `Prize: ${res.prizeName}\n\nCode: ${res.prizeCode}\n\nWe emailed your code.\nKeep your receipt.`);
       } else if(res.result === "GrandEntry"){
         openModal("🔥 YOU’RE IN THE DRAW!",
-          `Entry: ${res.prizeName}\n\nEntry Code: ${res.prizeCode}\n\nWe emailed your code.\nDrop your receipt in the draw box.`);
+          `Entry: ${res.prizeName}\n\nEntry Code: ${res.prizeCode}\n\nWe emailed your code.\nDrop your receipt in the box.`);
       } else {
         openModal("😅 NOT THIS TIME…",
           `No prize on this spin.\n\nSpend R${res.qualifyAmount}+ again to qualify.\nMore chicken = more chances. 🍗`);
