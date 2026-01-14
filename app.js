@@ -1,5 +1,5 @@
 /************** EDIT THESE **************/
-const API_URL = "PASTE_YOUR_APPS_SCRIPT_EXEC_URL_HERE"; // must end with /exec
+const API_URL = "https://script.google.com/macros/s/AKfycbzzVgCs1ntIEFUmiJpon9-ycHNJR3SXLLbrSEydtwJ0CKHqRsNUHz4vw4I0XIjhFLW3/exec"; // must end with /exec
 
 const STORE_SECRETS = {
   "CL-001": "HV-SECRET-2025"
