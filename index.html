@@ -4,121 +4,491 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Chicken Licken Soul Spin</title>
-  <link rel="stylesheet" href="styles.css" />
+  <style>
+    :root{
+      /* Brand vibe */
+      --bg0:#07080c;
+      --bg1:#0b0d14;
+      --card:rgba(255,255,255,.07);
+      --stroke:rgba(255,255,255,.12);
+      --muted:rgba(255,255,255,.72);
+      --text:#fff;
+
+      --orange:#ff6a00;
+      --red:#e5392d;
+      --yellow:#ffcc00;
+      --good:#34c759;
+      --bad:#ff3b30;
+
+      --r:20px;
+      --shadow:0 18px 50px rgba(0,0,0,.60);
+      --font:system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+
+      /* A9 portrait: keep everything on one screen */
+      --pad:12px;
+      --gap:10px;
+
+      /* Wheel size: MUST not dominate */
+      --wheel: clamp(210px, 30vh, 280px);
+      --centerBtn: clamp(74px, 10vh, 90px);
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; margin:0; font-family:var(--font); color:var(--text); overflow:hidden; }
+    body{
+      background:
+        radial-gradient(1200px 900px at 20% 10%, rgba(255,106,0,.16), transparent 55%),
+        radial-gradient(1000px 800px at 90% 20%, rgba(229,57,45,.14), transparent 55%),
+        radial-gradient(900px 700px at 40% 90%, rgba(255,204,0,.10), transparent 60%),
+        linear-gradient(180deg, var(--bg1), var(--bg0));
+    }
+
+    /* “Matrix” pattern overlay like your kiosks */
+    .matrix{
+      position:fixed; inset:0; pointer-events:none;
+      background:
+        linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+      background-size: 22px 22px;
+      opacity:.12;
+      mix-blend-mode: overlay;
+    }
+
+    .app{
+      height:100dvh;
+      display:flex;
+      flex-direction:column;
+      padding:var(--pad);
+      gap:var(--gap);
+    }
+
+    .topbar{
+      flex:0 0 auto;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:12px 14px;
+      border:1px solid var(--stroke);
+      border-radius:var(--r);
+      background: linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.06));
+      box-shadow:var(--shadow);
+    }
+
+    .brand{
+      display:flex; align-items:center; gap:10px; min-width:0;
+    }
+    .logo{
+      width:44px; height:44px; object-fit:contain;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,.55));
+    }
+    .brandText{ min-width:0; }
+    .brandTitle{
+      font-weight:1000;
+      font-size:15px;
+      letter-spacing:.3px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .brandSub{ font-size:12px; color:var(--muted); }
+
+    .pill{
+      display:flex; align-items:center; gap:10px;
+      padding:8px 12px;
+      border:1px solid var(--stroke);
+      border-radius:999px;
+      background: rgba(0,0,0,.25);
+    }
+    .dot{ width:10px; height:10px; border-radius:50%; background:var(--bad); box-shadow:0 0 0 4px rgba(255,59,48,.18); }
+    .pillText{ font-size:12px; color:var(--muted); }
+
+    /* MAIN LAYOUT: one “super card” so it looks clean */
+    .shell{
+      flex:1 1 auto;
+      min-height:0;
+      border:1px solid var(--stroke);
+      border-radius:var(--r);
+      background: linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.06));
+      box-shadow:var(--shadow);
+      padding:12px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .shellHead{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .shellTitle{
+      font-weight:1000;
+      letter-spacing:.3px;
+      font-size:14px;
+    }
+    .shellMeta{
+      font-size:11px;
+      color:var(--muted);
+      text-align:right;
+    }
+
+    /* Two compact cards inside the shell: form top, wheel bottom */
+    .grid{
+      flex:1 1 auto;
+      min-height:0;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .card{
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:16px;
+      background: rgba(0,0,0,.22);
+      padding:10px;
+    }
+
+    /* FORM CARD: scroll only inside the form area if needed */
+    .formCard{
+      flex:1 1 auto;
+      min-height:0;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .formTitleRow{
+      display:flex;
+      justify-content:space-between;
+      align-items:baseline;
+      gap:10px;
+    }
+    .formTitle{ font-weight:1000; font-size:13px; }
+    .formHint{ font-size:11px; color:var(--muted); }
+
+    .formScroll{
+      flex:1 1 auto;
+      min-height:0;
+      overflow:auto;
+      padding-right:4px;
+    }
+    .formScroll::-webkit-scrollbar{ width:6px; }
+    .formScroll::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.14); border-radius:10px; }
+
+    .row2{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    .field{ display:flex; flex-direction:column; gap:6px; margin-bottom:10px; }
+    label{ font-size:11px; color:var(--muted); }
+
+    input{
+      height:40px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color:var(--text);
+      padding:0 12px;
+      font-size:14px;
+      outline:none;
+    }
+    input:focus{
+      border-color: rgba(255,106,0,.7);
+      box-shadow: 0 0 0 4px rgba(255,106,0,.18);
+    }
+    .hint{ font-size:10.5px; color:rgba(255,255,255,.65); margin-top:-2px; }
+    .err{ font-size:10.5px; color:var(--bad); min-height:14px; }
+
+    .checks{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      padding-top:2px;
+    }
+    .chk{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-size:11px;
+      color:var(--muted);
+    }
+    .chk input{ width:auto; height:auto; }
+
+    .actionRow{
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    .cta{
+      height:46px;
+      border:none;
+      border-radius:16px;
+      padding:0 14px;
+      background: linear-gradient(180deg, var(--orange), #ff7d24);
+      color:#111;
+      font-weight:1000;
+      letter-spacing:.4px;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex:0 0 auto;
+    }
+    .cta:disabled{ opacity:.45; cursor:not-allowed; }
+    .ctaSmall{
+      height:42px;
+      border:none;
+      border-radius:14px;
+      padding:0 12px;
+      background: rgba(255,255,255,.10);
+      color:#fff;
+      font-weight:900;
+      cursor:pointer;
+    }
+    .statusText{
+      font-size:11px;
+      color:var(--muted);
+      line-height:1.2;
+      flex:1 1 auto;
+    }
+    .statusText b{ color:var(--orange); }
+
+    /* WHEEL CARD: compact and proportional */
+    .wheelCard{
+      flex:0 0 auto;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    .wheelTop{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-end;
+      gap:10px;
+    }
+    .wheelTitle{ font-weight:1000; font-size:13px; }
+    .wheelSub{ font-size:11px; color:var(--muted); text-align:right; }
+
+    .wheelZone{
+      position:relative;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      padding:6px 0;
+    }
+
+    .pointer{
+      position:absolute;
+      top:-2px;
+      width:0; height:0;
+      border-left:14px solid transparent;
+      border-right:14px solid transparent;
+      border-bottom:22px solid var(--yellow);
+      filter: drop-shadow(0 8px 14px rgba(0,0,0,.6));
+      z-index:5;
+    }
+
+    .wheelStage{
+      width:var(--wheel);
+      height:var(--wheel);
+      position:relative;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+    }
+
+    .rotator{
+      width:var(--wheel);
+      height:var(--wheel);
+      border-radius:50%;
+      transition: transform 3.8s cubic-bezier(.15,.85,.2,1);
+      filter: drop-shadow(0 18px 24px rgba(0,0,0,.65));
+      overflow:visible;
+    }
+
+    svg{ width:var(--wheel); height:var(--wheel); display:block; }
+
+    /* Spin button inside wheel */
+    .centerSpin{
+      position:absolute;
+      width:var(--centerBtn);
+      height:var(--centerBtn);
+      border-radius:50%;
+      border:2px solid rgba(255,255,255,.25);
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.18), rgba(0,0,0,.55));
+      color:#fff;
+      font-weight:1000;
+      letter-spacing:.4px;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      line-height:1.05;
+      box-shadow: 0 12px 24px rgba(0,0,0,.55);
+    }
+    .centerSpin:disabled{ opacity:.5; cursor:not-allowed; }
+
+    .wheelFooter{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:flex-start;
+    }
+    .footLeft{ font-size:11px; font-weight:1000; color:var(--orange); }
+    .footRight{ font-size:10.5px; color:rgba(255,255,255,.65); line-height:1.2; text-align:right; }
+
+    /* Modal */
+    .modal{
+      position:fixed; inset:0;
+      display:flex; align-items:center; justify-content:center;
+      background: rgba(0,0,0,.6);
+      z-index:999;
+    }
+    .hidden{ display:none; }
+    .modalCard{
+      width:min(520px, 92vw);
+      border-radius:22px;
+      background: rgba(14,14,16,.94);
+      border:1px solid rgba(255,255,255,.18);
+      padding:18px;
+      box-shadow: var(--shadow);
+    }
+    .modalTitle{ font-weight:1000; font-size:16px; margin-bottom:8px; }
+    .modalBody{ white-space:pre-line; font-size:13px; color: rgba(255,255,255,.82); margin-bottom:14px; }
+    .modalOk{
+      height:44px; width:100%;
+      border:none; border-radius:14px;
+      background: linear-gradient(180deg, var(--orange), #ff7d24);
+      color:#111; font-weight:1000;
+      cursor:pointer;
+    }
+  </style>
 </head>
 <body>
-  <div class="frame">
+  <div class="matrix"></div>
+
+  <div class="app">
     <header class="topbar">
       <div class="brand">
-        <img src="img/cl-logo.png" alt="Chicken Licken" class="logo" />
+        <img class="logo" src="img/cl-logo.png" alt="Chicken Licken" />
         <div class="brandText">
           <div class="brandTitle" id="storeName">Chicken Licken Soul Spin</div>
-          <div class="brandSub">Spend <span id="qualAmount">R0+</span> to qualify</div>
+          <div class="brandSub">Qualify at <b id="qualText">R0+</b> and spin</div>
         </div>
       </div>
-
-      <div class="status">
-        <div class="pill" id="onlinePill">
-          <span class="dot"></span>
-          <span id="onlineText">Offline</span>
-        </div>
+      <div class="pill" id="onlinePill">
+        <span class="dot"></span>
+        <span class="pillText" id="onlineText">Offline</span>
       </div>
     </header>
 
-    <main class="stack">
-      <section class="card formCard">
-        <div class="cardTitleRow">
-          <div class="cardTitle">Customer Details</div>
-          <div class="deviceMini">Device: <b id="deviceName">UNKNOWN</b></div>
+    <main class="shell">
+      <div class="shellHead">
+        <div>
+          <div class="shellTitle">Soul Spin Kiosk</div>
+          <div class="formHint">Receipt goes in the store box for draw verification.</div>
         </div>
+        <div class="shellMeta">
+          Device: <b id="deviceName">UNKNOWN</b><br/>
+          Store: <b id="storeIdLabel">-</b>
+        </div>
+      </div>
 
-        <div class="formScroll">
-          <div class="row2">
+      <div class="grid">
+        <section class="card formCard">
+          <div class="formTitleRow">
+            <div class="formTitle">Customer Details</div>
+            <div class="formHint">All fields required</div>
+          </div>
+
+          <div class="formScroll">
+            <div class="row2">
+              <div class="field">
+                <label>Name</label>
+                <input id="wName" placeholder="First name" autocomplete="off"/>
+              </div>
+              <div class="field">
+                <label>Surname</label>
+                <input id="wSurname" placeholder="Last name" autocomplete="off"/>
+              </div>
+            </div>
+
             <div class="field">
-              <label>Name</label>
-              <input id="wName" placeholder="First name" autocomplete="off" />
+              <label>Email</label>
+              <input id="wEmail" placeholder="name@email.com" autocomplete="off"/>
+              <div class="err" id="errEmail"></div>
             </div>
+
             <div class="field">
-              <label>Surname</label>
-              <input id="wSurname" placeholder="Last name" autocomplete="off" />
+              <label>Phone (10 digits)</label>
+              <input id="wPhone" placeholder="0821234567" inputmode="numeric" autocomplete="off"/>
+              <div class="err" id="errPhone"></div>
+            </div>
+
+            <div class="row2">
+              <div class="field">
+                <label>Receipt Number</label>
+                <input id="wReceipt" placeholder="As printed on slip" autocomplete="off"/>
+              </div>
+              <div class="field">
+                <label>Basket Amount (R)</label>
+                <input id="wAmount" placeholder="115" inputmode="decimal" autocomplete="off"/>
+                <div class="hint">Minimum: <b id="minAmountLabel">R0</b></div>
+              </div>
+            </div>
+
+            <div class="row2">
+              <div class="field">
+                <label>Staff PIN</label>
+                <input id="wPin" placeholder="****" inputmode="numeric" autocomplete="off"/>
+                <div class="hint">Ask cashier for today’s PIN</div>
+              </div>
+              <div class="field">
+                <label>Consent</label>
+                <div class="checks">
+                  <label class="chk"><input type="checkbox" id="wPopia"/> I consent to POPIA processing</label>
+                  <label class="chk"><input type="checkbox" id="wMarketing"/> I agree to receive marketing</label>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div class="field">
-            <label>Email</label>
-            <input id="wEmail" placeholder="name@email.com" autocomplete="off" />
-            <div class="err" id="errEmail"></div>
+          <div class="actionRow">
+            <button class="cta" id="spinBtn" disabled>
+              <span style="font-size:18px;">⟳</span> SPIN NOW
+            </button>
+            <div class="statusText" id="spinStatus">Loading store rules…</div>
+            <button class="ctaSmall" id="clearBtn" type="button">Clear</button>
+          </div>
+        </section>
+
+        <section class="card wheelCard">
+          <div class="wheelTop">
+            <div class="wheelTitle">Wheel</div>
+            <div class="wheelSub" id="wheelSub">Fill in details to unlock</div>
           </div>
 
-          <div class="field">
-            <label>Phone (10 digits)</label>
-            <input id="wPhone" placeholder="0821234567" inputmode="numeric" autocomplete="off" />
-            <div class="err" id="errPhone"></div>
-          </div>
-
-          <div class="row2">
-            <div class="field">
-              <label>Receipt Number</label>
-              <input id="wReceipt" placeholder="As printed on slip" autocomplete="off" />
-            </div>
-            <div class="field">
-              <label>Basket Amount (R)</label>
-              <input id="wAmount" placeholder="115" inputmode="decimal" autocomplete="off" />
-              <div class="hint">Min: <b id="minAmountLabel">R0</b></div>
+          <div class="wheelZone">
+            <div class="pointer"></div>
+            <div class="wheelStage">
+              <div class="rotator" id="wheelRotator">
+                <svg id="wheelSvg" viewBox="0 0 400 400"></svg>
+              </div>
+              <button class="centerSpin" id="centerSpin" disabled>SPIN<br/>THE<br/>WHEEL</button>
             </div>
           </div>
 
-          <div class="row2">
-            <div class="field">
-              <label>Staff PIN</label>
-              <input id="wPin" placeholder="****" inputmode="numeric" autocomplete="off" />
-              <div class="hint">Ask the cashier for today’s PIN</div>
-            </div>
-
-            <div class="field checks">
-              <label class="chk">
-                <input type="checkbox" id="wPopia" />
-                <span>I consent to POPIA processing</span>
-              </label>
-              <label class="chk">
-                <input type="checkbox" id="wMarketing" />
-                <span>I agree to receive marketing</span>
-              </label>
-            </div>
+          <div class="wheelFooter">
+            <div class="footLeft" id="footLeft">Loading…</div>
+            <div class="footRight">Keep receipt. If you enter a draw, drop it in the box.</div>
           </div>
-        </div>
-
-        <div class="actionRow">
-          <button id="spinBtn" class="spinBtn" disabled>
-            <span class="spinIcon">⟳</span>
-            SPIN THE WHEEL
-          </button>
-          <div class="spinStatus" id="spinStatus">Loading store rules…</div>
-        </div>
-      </section>
-
-      <section class="card wheelCard">
-        <div class="wheelHeader">
-          <div class="cardTitle">Soul Spin</div>
-          <div class="wheelSub" id="wheelSub">Fill in all details to unlock</div>
-        </div>
-
-        <div class="wheelWrap">
-          <div class="pointer"></div>
-
-          <div class="wheelStage">
-            <div class="wheelRotator" id="wheelRotator">
-              <svg id="wheelSvg" viewBox="0 0 400 400"></svg>
-            </div>
-            <button class="centerBtn" id="centerSpin" disabled>SPIN</button>
-          </div>
-        </div>
-
-        <div class="footRow">
-          <div class="footNote" id="statusRight">Loading store rules…</div>
-          <div class="tiny">Keep your receipt. Drop it in the draw box if you entered a draw.</div>
-        </div>
-      </section>
+        </section>
+      </div>
     </main>
   </div>
 
@@ -126,10 +496,421 @@
     <div class="modalCard">
       <div class="modalTitle" id="mTitle">Title</div>
       <div class="modalBody" id="mBody">Body</div>
-      <button id="mOk" class="modalOk">OK</button>
+      <button class="modalOk" id="mOk">OK</button>
     </div>
   </div>
 
-  <script src="app.js"></script>
+  <script>
+    /************** EDIT THESE **************/
+    const API_URL = "https://script.google.com/macros/s/AKfycbzzVgCs1ntIEFUmiJpon9-ycHNJR3SXLLbrSEydtwJ0CKHqRsNUHz4vw4I0XIjhFLW3/exec"; // must end with /exec
+    const STORE_SECRETS = { "CL-001": "HV-SECRET-2025" };
+    /***************************************/
+
+    const $ = (id) => document.getElementById(id);
+    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+    function getParam(name){
+      const m = new RegExp(`[?&]${name}=([^&]+)`, "i").exec(location.search);
+      return m ? decodeURIComponent(m[1]) : null;
+    }
+    function sanitizePhone(raw){ return String(raw||"").replace(/\\D+/g,""); }
+    function isValidPhone10(d){ return /^\\d{10}$/.test(d); }
+    function isValidEmail(e){ return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(String(e||"").trim()); }
+
+    function openModal(title, body){
+      $("mTitle").innerText = title;
+      $("mBody").innerText = body;
+      $("modal").classList.remove("hidden");
+    }
+    function closeModal(){ $("modal").classList.add("hidden"); }
+
+    function setOnlineUI(on){
+      const dot = $("onlinePill").querySelector(".dot");
+      $("onlineText").innerText = on ? "Online" : "Offline";
+      dot.style.background = on ? "#34c759" : "#ff3b30";
+      dot.style.boxShadow = on ? "0 0 0 4px rgba(52,199,89,.18)" : "0 0 0 4px rgba(255,59,48,.18)";
+    }
+
+    function apiJSONP(params, timeoutMs=6500){
+      return new Promise((resolve) => {
+        const cbName = `cb_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+        const qs = new URLSearchParams({ ...params, callback: cbName }).toString();
+        const url = `${API_URL}?${qs}`;
+
+        let done = false;
+        const timer = setTimeout(() => {
+          if(done) return;
+          done = true;
+          cleanup();
+          resolve({ ok:false, error:"timeout", detail:"API timeout" });
+        }, timeoutMs);
+
+        function cleanup(){
+          clearTimeout(timer);
+          try { delete window[cbName]; } catch(e){}
+          try { script.remove(); } catch(e){}
+        }
+
+        window[cbName] = (data) => {
+          if(done) return;
+          done = true;
+          cleanup();
+          resolve(data);
+        };
+
+        const script = document.createElement("script");
+        script.src = url;
+        script.onerror = () => {
+          if(done) return;
+          done = true;
+          cleanup();
+          resolve({ ok:false, error:"network", detail:"Could not reach API" });
+        };
+
+        document.body.appendChild(script);
+      });
+    }
+
+    const STORE_ID = getParam("store") || "";
+    const DEVICE_ID = (function(){
+      const fromUrl = getParam("device");
+      if(fromUrl){
+        localStorage.setItem("cl_device_id", fromUrl);
+        return fromUrl;
+      }
+      return localStorage.getItem("cl_device_id") || "UNKNOWN";
+    })();
+
+    let CFG = null;
+    let spinning = false;
+    let wheelRotation = 0;
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      $("deviceName").innerText = DEVICE_ID;
+      $("storeIdLabel").innerText = STORE_ID || "-";
+      $("mOk").addEventListener("click", closeModal);
+      $("centerSpin").addEventListener("click", spin);
+      $("spinBtn").addEventListener("click", spin);
+
+      $("clearBtn").addEventListener("click", () => {
+        ["wName","wSurname","wEmail","wPhone","wReceipt","wAmount","wPin"].forEach(id => $(id).value="");
+        $("wPopia").checked=false;
+        $("wMarketing").checked=false;
+        validateAndUpdate();
+      });
+
+      drawWheelFallback();
+      wireValidation();
+
+      if(!STORE_ID){
+        setOnlineUI(false);
+        openModal("Missing store", "Your URL must include:\n?store=CL-001&device=TAB-A9-HIGHVELD-01");
+        return;
+      }
+
+      const secret = STORE_SECRETS[STORE_ID];
+      if(!secret){
+        setOnlineUI(false);
+        openModal("Missing secret", `No StoreSecret configured in this file for ${STORE_ID}`);
+        return;
+      }
+
+      if(!API_URL.includes("/exec")){
+        setOnlineUI(false);
+        openModal("Bad API URL", "API_URL must be your Apps Script /exec link.");
+        return;
+      }
+
+      const res = await apiJSONP({
+        action: "getconfig",
+        storeId: STORE_ID,
+        storeSecret: secret,
+        deviceId: DEVICE_ID
+      }, 6500);
+
+      if(!res.ok){
+        setOnlineUI(false);
+        openModal("Setup blocked", `${res.error}\n${res.detail || ""}\n\nVersion: ${res._version || "unknown"}`);
+        return;
+      }
+
+      CFG = res;
+      setOnlineUI(true);
+
+      $("storeName").innerText = CFG.store.name;
+      $("minAmountLabel").innerText = `R${CFG.store.qualifyAmount}`;
+      $("qualText").innerText = `R${CFG.store.qualifyAmount}+`;
+      $("footLeft").innerText = `Qualify at R${CFG.store.qualifyAmount}+`;
+
+      drawWheelFromConfig(CFG.prizes);
+      validateAndUpdate();
+    });
+
+    function wireValidation(){
+      const ids = ["wName","wSurname","wEmail","wPhone","wReceipt","wAmount","wPin","wPopia","wMarketing"];
+      ids.forEach(id => {
+        const el = $(id);
+        el.addEventListener(el.type==="checkbox" ? "change" : "input", () => {
+          if(id==="wPhone") el.value = sanitizePhone(el.value);
+          validateAndUpdate();
+        });
+      });
+    }
+
+    function validateAndUpdate(){
+      $("errEmail").innerText = "";
+      $("errPhone").innerText = "";
+
+      const name = $("wName").value.trim();
+      const surname = $("wSurname").value.trim();
+      const email = $("wEmail").value.trim();
+      const phone = sanitizePhone($("wPhone").value);
+      const receipt = $("wReceipt").value.trim();
+      const amount = Number($("wAmount").value || 0);
+      const pin = $("wPin").value.trim();
+      const popia = $("wPopia").checked;
+      const marketing = $("wMarketing").checked;
+
+      if(!CFG){
+        setStatus("Loading store rules…", false);
+        $("spinBtn").disabled = true;
+        $("centerSpin").disabled = true;
+        return;
+      }
+
+      if(!name || !surname || !email || !phone || !receipt || !amount || !pin){
+        setStatus("Complete all fields to unlock SPIN", false);
+        $("spinBtn").disabled = true;
+        $("centerSpin").disabled = true;
+        return;
+      }
+
+      if(!isValidEmail(email)){
+        $("errEmail").innerText = "Enter a valid email.";
+        setStatus("Fix email to continue", false);
+        $("spinBtn").disabled = true;
+        $("centerSpin").disabled = true;
+        return;
+      }
+
+      if(!isValidPhone10(phone)){
+        $("errPhone").innerText = "Phone must be exactly 10 digits.";
+        setStatus("Fix phone to continue", false);
+        $("spinBtn").disabled = true;
+        $("centerSpin").disabled = true;
+        return;
+      }
+
+      if(!popia || !marketing){
+        setStatus("POPIA + marketing consent required", false);
+        $("spinBtn").disabled = true;
+        $("centerSpin").disabled = true;
+        return;
+      }
+
+      if(amount < Number(CFG.store.qualifyAmount)){
+        setStatus(`Not qualified. Minimum R${CFG.store.qualifyAmount}`, false);
+        $("spinBtn").disabled = true;
+        $("centerSpin").disabled = true;
+        return;
+      }
+
+      setStatus("Ready. Tap SPIN!", true);
+      $("spinBtn").disabled = false;
+      $("centerSpin").disabled = false;
+    }
+
+    function setStatus(msg, ok){
+      $("spinStatus").innerHTML = ok ? `<b>${msg}</b>` : msg;
+      $("spinStatus").style.color = ok ? "#34c759" : "rgba(255,255,255,.72)";
+      $("wheelSub").innerText = ok ? "Tap the center button to spin" : "Fill details to unlock";
+    }
+
+    function drawWheelFallback(){
+      const demo = [
+        {name:"FREE CHIPS", imageUrl:""},
+        {name:"TRY AGAIN", imageUrl:""},
+        {name:"TRY AGAIN", imageUrl:""},
+        {name:"FREE WINGS", imageUrl:""},
+        {name:"TRY AGAIN", imageUrl:""},
+        {name:"TRY AGAIN", imageUrl:""},
+        {name:"TRY AGAIN", imageUrl:""},
+        {name:"DRAW ENTRY", imageUrl:""},
+        {name:"TRY AGAIN", imageUrl:""},
+        {name:"GRAND DRAW", imageUrl:""}
+      ];
+      drawWheel(demo);
+    }
+
+    function drawWheelFromConfig(prizes){
+      const wedges = (prizes||[]).slice(0,10).map(p => ({
+        name: p.name || "TRY AGAIN",
+        imageUrl: (p.imageUrl || "").trim()
+      }));
+      while(wedges.length < 10) wedges.push({name:"TRY AGAIN", imageUrl:""});
+      drawWheel(wedges);
+    }
+
+    /* WEDGE IMAGES LATER:
+       Put a PUBLIC URL into Prizes.ImageURL in your Google Sheet.
+       That image will render in that wedge.
+    */
+    function drawWheel(wedges){
+      const svg = $("wheelSvg");
+      svg.innerHTML = "";
+
+      const n=10, cx=200, cy=200, r=190;
+      const step=(Math.PI*2)/n;
+
+      // Brand alternating wedges
+      const fills = ["#ff6a00","#10131b","#ff6a00","#10131b","#ff6a00","#10131b","#ff6a00","#10131b","#e5392d","#10131b"];
+
+      for(let i=0;i<n;i++){
+        const start = -Math.PI/2 + i*step;
+        const end = start + step;
+
+        const path = document.createElementNS("http://www.w3.org/2000/svg","path");
+        path.setAttribute("d", wedgePath(cx,cy,r,start,end));
+        path.setAttribute("fill", fills[i % fills.length]);
+        path.setAttribute("stroke","rgba(255,255,255,.14)");
+        path.setAttribute("stroke-width","2");
+        svg.appendChild(path);
+
+        const label = (wedges[i]?.name || "TRY AGAIN");
+        const imgUrl = (wedges[i]?.imageUrl || "").trim();
+        const textColor = "#fff";
+        const mid=(start+end)/2;
+
+        if(imgUrl){
+          const ix = cx + Math.cos(mid)*118 - 26;
+          const iy = cy + Math.sin(mid)*118 - 26;
+
+          const img = document.createElementNS("http://www.w3.org/2000/svg","image");
+          img.setAttributeNS("http://www.w3.org/1999/xlink","href", imgUrl);
+          img.setAttribute("x", ix);
+          img.setAttribute("y", iy);
+          img.setAttribute("width", "52");
+          img.setAttribute("height", "52");
+          const rot=(mid*180/Math.PI)+90;
+          img.setAttribute("transform", `rotate(${rot} ${ix+26} ${iy+26})`);
+          svg.appendChild(img);
+        }
+
+        const tx=cx + Math.cos(mid)*128;
+        const ty=cy + Math.sin(mid)*128;
+
+        const text = document.createElementNS("http://www.w3.org/2000/svg","text");
+        text.setAttribute("x",tx);
+        text.setAttribute("y",ty);
+        text.setAttribute("text-anchor","middle");
+        text.setAttribute("dominant-baseline","middle");
+        text.setAttribute("font-size","11");
+        text.setAttribute("font-weight","1000");
+        text.setAttribute("fill",textColor);
+
+        const rot=(mid*180/Math.PI)+90;
+        text.setAttribute("transform",`rotate(${rot} ${tx} ${ty})`);
+
+        const words = String(label).split(" ");
+        const line1 = words.slice(0,2).join(" ").toUpperCase();
+        const line2 = words.slice(2).join(" ").toUpperCase();
+
+        const t1 = document.createElementNS("http://www.w3.org/2000/svg","tspan");
+        t1.setAttribute("x",tx);
+        t1.textContent = line1;
+        text.appendChild(t1);
+
+        if(line2){
+          const t2 = document.createElementNS("http://www.w3.org/2000/svg","tspan");
+          t2.setAttribute("x",tx);
+          t2.setAttribute("dy","12");
+          t2.textContent = line2;
+          text.appendChild(t2);
+        }
+
+        svg.appendChild(text);
+      }
+
+      // Outer ring
+      const ring = document.createElementNS("http://www.w3.org/2000/svg","circle");
+      ring.setAttribute("cx",cx); ring.setAttribute("cy",cy); ring.setAttribute("r","192");
+      ring.setAttribute("fill","none");
+      ring.setAttribute("stroke","rgba(255,255,255,.18)");
+      ring.setAttribute("stroke-width","4");
+      svg.appendChild(ring);
+
+      // Center ring
+      const center = document.createElementNS("http://www.w3.org/2000/svg","circle");
+      center.setAttribute("cx",cx); center.setAttribute("cy",cy); center.setAttribute("r","78");
+      center.setAttribute("fill","rgba(0,0,0,.25)");
+      center.setAttribute("stroke","rgba(255,255,255,.25)");
+      center.setAttribute("stroke-width","2");
+      svg.appendChild(center);
+    }
+
+    function wedgePath(cx,cy,r,start,end){
+      const x1=cx+Math.cos(start)*r, y1=cy+Math.sin(start)*r;
+      const x2=cx+Math.cos(end)*r, y2=cy+Math.sin(end)*r;
+      const largeArc=(end-start)>Math.PI?1:0;
+      return `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`;
+    }
+
+    async function spin(){
+      if(spinning) return;
+      if($("spinBtn").disabled) return;
+
+      spinning = true;
+      $("spinBtn").disabled = true;
+      $("centerSpin").disabled = true;
+
+      // Instant spin UI
+      wheelRotation += (6*360) + Math.random()*360;
+      $("wheelRotator").style.transform = `rotate(${wheelRotation}deg)`;
+
+      const resPromise = apiJSONP({
+        action: "spin",
+        storeId: STORE_ID,
+        storeSecret: STORE_SECRETS[STORE_ID],
+        deviceId: DEVICE_ID,
+
+        name: $("wName").value.trim(),
+        surname: $("wSurname").value.trim(),
+        email: $("wEmail").value.trim(),
+        phone: sanitizePhone($("wPhone").value),
+        receiptNumber: $("wReceipt").value.trim(),
+        basketAmount: Number($("wAmount").value || 0),
+
+        popia: $("wPopia").checked ? "true" : "false",
+        marketing: $("wMarketing").checked ? "true" : "false",
+        cashierPin: $("wPin").value.trim()
+      }, 6500);
+
+      const [res] = await Promise.all([resPromise, sleep(3900)]);
+
+      if(!res.ok){
+        setOnlineUI(false);
+        openModal("Spin blocked", `${res.error}\n${res.detail || ""}\n\nVersion: ${res._version || "unknown"}`);
+        spinning = false;
+        validateAndUpdate();
+        return;
+      }
+
+      setOnlineUI(true);
+
+      if(res.result === "Win"){
+        openModal("🍗 SOUL GOOD! YOU WON!",
+          `Prize: ${res.prizeName}\n\nCode: ${res.prizeCode}\n\nWe emailed your code.\nKeep your receipt.`);
+      } else if(res.result === "GrandEntry"){
+        openModal("🔥 YOU’RE IN THE DRAW!",
+          `Entry: ${res.prizeName}\n\nEntry Code: ${res.prizeCode}\n\nWe emailed your code.\nDrop your receipt in the draw box.`);
+      } else {
+        openModal("😅 NOT THIS TIME…",
+          `No prize on this spin.\n\nSpend R${res.qualifyAmount}+ again to qualify.\nMore chicken = more chances. 🍗`);
+      }
+
+      spinning = false;
+      validateAndUpdate();
+    }
+  </script>
 </body>
 </html>
