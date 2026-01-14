@@ -25,7 +25,6 @@
       --pad:12px;
       --gap:10px;
 
-      /* Wheel bounded so it cannot dominate */
       --wheel: clamp(210px, 30vh, 280px);
       --centerBtn: clamp(74px, 10vh, 90px);
     }
@@ -72,7 +71,6 @@
 
     .brand{ display:flex; align-items:center; gap:10px; min-width:0; }
 
-    /* Logo + fallback */
     .logoWrap{
       width:44px; height:44px;
       border-radius:14px;
@@ -209,7 +207,6 @@
     .hint{ font-size:10.5px; color:rgba(255,255,255,.65); margin-top:-2px; }
     .err{ font-size:10.5px; color:var(--bad); min-height:14px; }
 
-    /* Consent now full-width underneath PIN */
     .consentBlock{
       margin-top:4px;
       padding:10px;
@@ -237,15 +234,12 @@
       gap:10px;
       align-items:center;
     }
-
-    /* Removed external buttons. Only center wheel button remains. */
     .statusText{
       font-size:11px;
       color:var(--muted);
       line-height:1.2;
       flex:1 1 auto;
     }
-    .statusText b{ color:var(--orange); }
 
     .wheelCard{
       flex:0 0 auto;
@@ -271,14 +265,14 @@
       padding:6px 0;
     }
 
-    /* FIX: pointer now points DOWN into the wheel (previously wrong direction) */
+    /* pointer points DOWN into wheel */
     .pointer{
       position:absolute;
       top:-2px;
       width:0; height:0;
       border-left:14px solid transparent;
       border-right:14px solid transparent;
-      border-top:22px solid var(--yellow); /* DOWNWARD pointer */
+      border-top:22px solid var(--yellow);
       filter: drop-shadow(0 8px 14px rgba(0,0,0,.6));
       z-index:5;
     }
@@ -435,14 +429,12 @@
               </div>
             </div>
 
-            <!-- PIN first -->
             <div class="field">
               <label>Staff PIN</label>
               <input id="wPin" placeholder="****" inputmode="numeric" autocomplete="off"/>
               <div class="hint">Ask cashier for today’s PIN</div>
             </div>
 
-            <!-- Consent underneath PIN (fixed) -->
             <div class="consentBlock">
               <div class="checks">
                 <label class="chk"><input type="checkbox" id="wPopia"/> <span>I consent to POPIA processing</span></label>
@@ -451,7 +443,6 @@
             </div>
           </div>
 
-          <!-- Buttons removed: only status remains -->
           <div class="actionRow">
             <div class="statusText" id="spinStatus">Loading store rules…</div>
           </div>
@@ -492,7 +483,7 @@
 
   <script>
     /************** EDIT THESE **************/
-    const API_URL = "https://script.google.com/macros/s/AKfycbzzVgCs1ntIEFUmiJpon9-ycHNJR3SXLLbrSEydtwJ0CKHqRsNUHz4vw4I0XIjhFLW3/exec"; // must end with /exec
+    const API_URL = "https://script.google.com/macros/s/AKfycbzlNM3N7-a7OnEzpgjF4U0EwpqUIIqC8nkqgUFtza1fZpKd1rZ4nlVv5j_GPYhDlA0g/exec"; // must end with /exec
     const STORE_SECRETS = { "CL-001": "HV-SECRET-2025" };
     /***************************************/
 
@@ -503,9 +494,8 @@
       const m = new RegExp(`[?&]${name}=([^&]+)`, "i").exec(location.search);
       return m ? decodeURIComponent(m[1]) : null;
     }
-    function sanitizePhone(raw){ return String(raw||"").replace(/\D+/g,""); }
 
-    /* Slightly stricter but still normal email validation */
+    function sanitizePhone(raw){ return String(raw||"").replace(/\D+/g,""); }
     function normalizeEmail(e){ return String(e||"").trim().toLowerCase(); }
     function isValidEmail(e){
       e = normalizeEmail(e);
@@ -529,7 +519,7 @@
       dot.style.boxShadow = on ? "0 0 0 4px rgba(52,199,89,.18)" : "0 0 0 4px rgba(255,59,48,.18)";
     }
 
-    function apiJSONP(params, timeoutMs=6500){
+    function apiJSONP(params, timeoutMs=15000){
       return new Promise((resolve) => {
         const cbName = `cb_${Date.now()}_${Math.random().toString(16).slice(2)}`;
         const qs = new URLSearchParams({ ...params, callback: cbName }).toString();
@@ -569,6 +559,16 @@
       });
     }
 
+    async function apiJSONPWithRetry(params, attempts=2){
+      for(let i=0;i<attempts;i++){
+        const res = await apiJSONP(params, 15000);
+        if(res && res.ok) return res;
+        if(!res || (res.error!=="timeout" && res.error!=="network")) return res;
+        await sleep(400 + i*600);
+      }
+      return { ok:false, error:"timeout", detail:"API timeout after retries" };
+    }
+
     const STORE_ID = getParam("store") || "";
     const DEVICE_ID = (function(){
       const fromUrl = getParam("device");
@@ -584,7 +584,7 @@
     let wheelRotation = 0;
 
     document.addEventListener("DOMContentLoaded", async () => {
-      // Logo fallback if image not found
+      // Logo fallback
       const logo = $("logoImg");
       logo.addEventListener("error", () => {
         logo.style.display = "none";
@@ -618,12 +618,12 @@
         return;
       }
 
-      const res = await apiJSONP({
+      const res = await apiJSONPWithRetry({
         action: "getconfig",
         storeId: STORE_ID,
         storeSecret: secret,
         deviceId: DEVICE_ID
-      }, 6500);
+      }, 2);
 
       if(!res.ok){
         setOnlineUI(false);
@@ -647,12 +647,9 @@
       const ids = ["wName","wSurname","wEmail","wPhone","wReceipt","wAmount","wPin","wPopia","wMarketing"];
       ids.forEach(id => {
         const el = $(id);
-
         el.addEventListener(el.type==="checkbox" ? "change" : "input", () => {
           if(id==="wPhone"){
-            // Hard limit to 10 digits, strip non-digits
-            const digits = sanitizePhone(el.value).slice(0,10);
-            el.value = digits;
+            el.value = sanitizePhone(el.value).slice(0,10); // hard cap 10 digits
           }
           validateAndUpdate();
         });
@@ -724,14 +721,14 @@
       const demo = [
         {name:"FREE CHIPS", imageUrl:""},
         {name:"TRY AGAIN", imageUrl:""},
-        {name:"TRY AGAIN", imageUrl:""},
         {name:"FREE WINGS", imageUrl:""},
-        {name:"TRY AGAIN", imageUrl:""},
-        {name:"TRY AGAIN", imageUrl:""},
         {name:"TRY AGAIN", imageUrl:""},
         {name:"DRAW ENTRY", imageUrl:""},
         {name:"TRY AGAIN", imageUrl:""},
-        {name:"GRAND DRAW", imageUrl:""}
+        {name:"FREE DRINK", imageUrl:""},
+        {name:"TRY AGAIN", imageUrl:""},
+        {name:"GRAND DRAW", imageUrl:""},
+        {name:"TRY AGAIN", imageUrl:""}
       ];
       drawWheel(demo);
     }
@@ -745,6 +742,10 @@
       drawWheel(wedges);
     }
 
+    /* WEDGE IMAGES LATER:
+       Put a PUBLIC URL into Prizes.ImageURL.
+       That image will render on that wedge.
+    */
     function drawWheel(wedges){
       const svg = $("wheelSvg");
       svg.innerHTML = "";
@@ -848,13 +849,11 @@
       spinning = true;
       $("centerSpin").disabled = true;
 
-      // Instant spin UI
-      wheelRotation += (6*360) + Math.random()*360;
+      // Instant movement
+      wheelRotation += (2*360) + (Math.random()*360);
       $("wheelRotator").style.transform = `rotate(${wheelRotation}deg)`;
 
-      const email = normalizeEmail($("wEmail").value);
-
-      const resPromise = apiJSONP({
+      const resPromise = apiJSONPWithRetry({
         action: "spin",
         storeId: STORE_ID,
         storeSecret: STORE_SECRETS[STORE_ID],
@@ -862,7 +861,7 @@
 
         name: $("wName").value.trim(),
         surname: $("wSurname").value.trim(),
-        email: email,
+        email: normalizeEmail($("wEmail").value),
         phone: sanitizePhone($("wPhone").value).slice(0,10),
         receiptNumber: $("wReceipt").value.trim(),
         basketAmount: Number($("wAmount").value || 0),
@@ -870,9 +869,10 @@
         popia: $("wPopia").checked ? "true" : "false",
         marketing: $("wMarketing").checked ? "true" : "false",
         cashierPin: $("wPin").value.trim()
-      }, 6500);
+      }, 2);
 
-      const [res] = await Promise.all([resPromise, sleep(3900)]);
+      // wait enough for animation to feel smooth
+      const [res] = await Promise.all([resPromise, sleep(2400)]);
 
       if(!res.ok){
         setOnlineUI(false);
@@ -883,6 +883,20 @@
       }
 
       setOnlineUI(true);
+
+      // FORCE wheel to land on backend-selected wedge
+      if (typeof res.wedgeIndex === "number" && res.wedgeIndex >= 0) {
+        const n = 10;
+        const step = 360 / n;
+        const wedgeCenter = (res.wedgeIndex * step) + (step / 2);
+        const landing = -wedgeCenter;
+
+        wheelRotation = (Math.floor(wheelRotation / 360) * 360) + (5 * 360) + landing;
+        $("wheelRotator").style.transform = `rotate(${wheelRotation}deg)`;
+
+        // let it finish
+        await sleep(1700);
+      }
 
       if(res.result === "Win"){
         openModal("🍗 SOUL GOOD! YOU WON!",
