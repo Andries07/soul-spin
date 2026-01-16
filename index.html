@@ -1,917 +1,642 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Chicken Licken Soul Spin</title>
-  <style>
-    :root{
-      --bg0:#07080c;
-      --bg1:#0b0d14;
-      --stroke:rgba(255,255,255,.12);
-      --muted:rgba(255,255,255,.72);
-      --text:#fff;
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Chicken Licken Soul Spin</title>
 
-      --orange:#ff6a00;
-      --red:#e5392d;
-      --yellow:#ffcc00;
-      --good:#34c759;
-      --bad:#ff3b30;
+<style>
+  :root{
+    --bg0:#07080c; --bg1:#0b0d14;
+    --stroke:rgba(255,255,255,.12);
+    --muted:rgba(255,255,255,.72);
+    --text:#fff;
+    --orange:#ff6a00;
+    --red:#e5392d;
+    --yellow:#ffcc00;
+    --good:#34c759;
+    --bad:#ff3b30;
+    --r:20px;
+    --shadow:0 18px 50px rgba(0,0,0,.60);
+    --font:system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    --pad:12px;
+    --gap:10px;
 
-      --r:20px;
-      --shadow:0 18px 50px rgba(0,0,0,.60);
-      --font:system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    /* Portrait A9 safe wheel sizing */
+    --wheel: clamp(220px, 30vh, 290px);
+    --centerBtn: clamp(76px, 10vh, 92px);
+  }
 
-      --pad:12px;
-      --gap:10px;
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; margin:0; font-family:var(--font); color:var(--text); overflow:hidden; }
 
-      --wheel: clamp(210px, 30vh, 280px);
-      --centerBtn: clamp(74px, 10vh, 90px);
-    }
+  body{
+    background:
+      radial-gradient(1200px 900px at 20% 10%, rgba(255,106,0,.16), transparent 55%),
+      radial-gradient(1000px 800px at 90% 20%, rgba(229,57,45,.14), transparent 55%),
+      radial-gradient(900px 700px at 40% 90%, rgba(255,204,0,.10), transparent 60%),
+      linear-gradient(180deg, var(--bg1), var(--bg0));
+  }
 
-    *{ box-sizing:border-box; }
-    html,body{ height:100%; margin:0; font-family:var(--font); color:var(--text); overflow:hidden; }
-    body{
-      background:
-        radial-gradient(1200px 900px at 20% 10%, rgba(255,106,0,.16), transparent 55%),
-        radial-gradient(1000px 800px at 90% 20%, rgba(229,57,45,.14), transparent 55%),
-        radial-gradient(900px 700px at 40% 90%, rgba(255,204,0,.10), transparent 60%),
-        linear-gradient(180deg, var(--bg1), var(--bg0));
-    }
+  /* Matrix background using img/cl-logo.png */
+  .logoMatrix{
+    position:fixed; inset:0; pointer-events:none;
+    background-image:url("img/cl-logo.png");
+    background-repeat:repeat;
+    background-size:120px 120px;
+    opacity:.07;
+    filter:saturate(1.1) contrast(1.05);
+    mix-blend-mode:overlay;
+  }
+  .gridOverlay{
+    position:fixed; inset:0; pointer-events:none;
+    background:
+      linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+    background-size:22px 22px;
+    opacity:.10;
+    mix-blend-mode:overlay;
+  }
 
-    .matrix{
-      position:fixed; inset:0; pointer-events:none;
-      background:
-        linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
-      background-size: 22px 22px;
-      opacity:.12;
-      mix-blend-mode: overlay;
-    }
+  .app{ height:100dvh; display:flex; flex-direction:column; padding:var(--pad); gap:var(--gap); }
 
-    .app{
-      height:100dvh;
-      display:flex;
-      flex-direction:column;
-      padding:var(--pad);
-      gap:var(--gap);
-    }
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:12px 14px; border:1px solid var(--stroke); border-radius:var(--r);
+    background:linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.06));
+    box-shadow:var(--shadow);
+  }
+  .brand{ display:flex; align-items:center; gap:10px; min-width:0; }
+  .logoWrap{
+    width:44px; height:44px; border-radius:14px; display:grid; place-items:center;
+    background:rgba(0,0,0,.25); border:1px solid rgba(255,255,255,.12);
+    overflow:hidden; flex:0 0 auto;
+    box-shadow:0 10px 18px rgba(0,0,0,.45);
+  }
+  .logo{ width:44px; height:44px; object-fit:contain; display:block; }
+  .brandText{ min-width:0; }
+  .brandTitle{ font-weight:1000; font-size:15px; letter-spacing:.3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .brandSub{ font-size:12px; color:var(--muted); }
 
-    .topbar{
-      flex:0 0 auto;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      padding:12px 14px;
-      border:1px solid var(--stroke);
-      border-radius:var(--r);
-      background: linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.06));
-      box-shadow:var(--shadow);
-    }
+  .pill{ display:flex; align-items:center; gap:10px; padding:8px 12px; border:1px solid var(--stroke); border-radius:999px; background:rgba(0,0,0,.25); }
+  .dot{ width:10px; height:10px; border-radius:50%; background:var(--bad); box-shadow:0 0 0 4px rgba(255,59,48,.18); }
+  .pillText{ font-size:12px; color:var(--muted); }
 
-    .brand{ display:flex; align-items:center; gap:10px; min-width:0; }
+  .shell{
+    flex:1 1 auto; min-height:0;
+    border:1px solid var(--stroke); border-radius:var(--r);
+    background:linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.06));
+    box-shadow:var(--shadow);
+    padding:12px; display:flex; flex-direction:column; gap:10px;
+  }
+  .shellHead{ display:flex; align-items:flex-end; justify-content:space-between; gap:10px; }
+  .shellTitle{ font-weight:1000; letter-spacing:.3px; font-size:14px; }
+  .shellMeta{ font-size:11px; color:var(--muted); text-align:right; }
 
-    .logoWrap{
-      width:44px; height:44px;
-      border-radius:14px;
-      display:grid;
-      place-items:center;
-      background: rgba(0,0,0,.25);
-      border:1px solid rgba(255,255,255,.12);
-      overflow:hidden;
-      flex:0 0 auto;
-      box-shadow: 0 10px 18px rgba(0,0,0,.45);
-    }
-    .logo{
-      width:44px; height:44px;
-      object-fit:contain;
-      display:block;
-    }
-    .logoFallback{
-      width:44px; height:44px;
-      display:none;
-      place-items:center;
-      font-weight:1000;
-      letter-spacing:.8px;
-      color:#111;
-      background: linear-gradient(180deg, var(--orange), #ff7d24);
-    }
+  .grid{ flex:1 1 auto; min-height:0; display:flex; flex-direction:column; gap:10px; }
+  .card{ border:1px solid rgba(255,255,255,.12); border-radius:16px; background:rgba(0,0,0,.22); padding:10px; backdrop-filter:blur(3px); }
+  .formCard{ flex:1 1 auto; min-height:0; display:flex; flex-direction:column; gap:10px; }
 
-    .brandText{ min-width:0; }
-    .brandTitle{
-      font-weight:1000;
-      font-size:15px;
-      letter-spacing:.3px;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-    .brandSub{ font-size:12px; color:var(--muted); }
+  .formTitleRow{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; }
+  .formTitle{ font-weight:1000; font-size:13px; }
+  .formHint{ font-size:11px; color:var(--muted); }
 
-    .pill{
-      display:flex; align-items:center; gap:10px;
-      padding:8px 12px;
-      border:1px solid var(--stroke);
-      border-radius:999px;
-      background: rgba(0,0,0,.25);
-    }
-    .dot{ width:10px; height:10px; border-radius:50%; background:var(--bad); box-shadow:0 0 0 4px rgba(255,59,48,.18); }
-    .pillText{ font-size:12px; color:var(--muted); }
+  .formScroll{ flex:1 1 auto; min-height:0; overflow:auto; padding-right:4px; }
+  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .field{ display:flex; flex-direction:column; gap:6px; margin-bottom:10px; }
+  label{ font-size:11px; color:var(--muted); }
+  input{
+    height:40px; border-radius:14px; border:1px solid rgba(255,255,255,.14);
+    background:rgba(255,255,255,.06); color:var(--text); padding:0 12px; font-size:14px; outline:none;
+  }
+  input:focus{ border-color:rgba(255,106,0,.7); box-shadow:0 0 0 4px rgba(255,106,0,.18); }
+  .hint{ font-size:10.5px; color:rgba(255,255,255,.65); margin-top:-2px; }
+  .err{ font-size:10.5px; color:var(--bad); min-height:14px; }
 
-    .shell{
-      flex:1 1 auto;
-      min-height:0;
-      border:1px solid var(--stroke);
-      border-radius:var(--r);
-      background: linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.06));
-      box-shadow:var(--shadow);
-      padding:12px;
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-    }
+  .consentBlock{
+    margin-top:4px; padding:10px; border-radius:14px;
+    border:1px solid rgba(255,255,255,.10); background:rgba(255,255,255,.04);
+  }
+  .checks{ display:flex; flex-direction:column; gap:8px; }
+  .chk{ display:flex; align-items:flex-start; gap:10px; font-size:11px; color:var(--muted); line-height:1.2; }
+  .chk input{ width:auto; height:auto; margin-top:2px; }
 
-    .shellHead{
-      display:flex;
-      align-items:flex-end;
-      justify-content:space-between;
-      gap:10px;
-    }
-    .shellTitle{ font-weight:1000; letter-spacing:.3px; font-size:14px; }
-    .shellMeta{ font-size:11px; color:var(--muted); text-align:right; }
+  .statusText{ font-size:11px; color:var(--muted); line-height:1.2; }
 
-    .grid{
-      flex:1 1 auto;
-      min-height:0;
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-    }
+  .wheelCard{ flex:0 0 auto; display:flex; flex-direction:column; gap:8px; }
+  .wheelTop{ display:flex; justify-content:space-between; align-items:flex-end; gap:10px; }
+  .wheelTitle{ font-weight:1000; font-size:13px; }
+  .wheelSub{ font-size:11px; color:var(--muted); text-align:right; }
 
-    .card{
-      border:1px solid rgba(255,255,255,.12);
-      border-radius:16px;
-      background: rgba(0,0,0,.22);
-      padding:10px;
-    }
+  .wheelZone{ position:relative; display:flex; justify-content:center; align-items:center; padding:6px 0; }
+  .pointer{
+    position:absolute; top:-2px; width:0; height:0;
+    border-left:14px solid transparent; border-right:14px solid transparent;
+    border-top:22px solid var(--yellow);
+    filter:drop-shadow(0 8px 14px rgba(0,0,0,.6));
+    z-index:5;
+  }
+  .wheelStage{ width:var(--wheel); height:var(--wheel); position:relative; display:flex; justify-content:center; align-items:center; }
+  .rotator{
+    width:var(--wheel); height:var(--wheel); border-radius:50%;
+    transition:transform 3.8s cubic-bezier(.15,.85,.2,1);
+    filter:drop-shadow(0 18px 24px rgba(0,0,0,.65));
+  }
+  svg{ width:var(--wheel); height:var(--wheel); display:block; }
+  .centerSpin{
+    position:absolute; width:var(--centerBtn); height:var(--centerBtn); border-radius:50%;
+    border:2px solid rgba(255,255,255,.25);
+    background:radial-gradient(circle at 30% 30%, rgba(255,255,255,.18), rgba(0,0,0,.55));
+    color:#fff; font-weight:1000; letter-spacing:.4px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; text-align:center; line-height:1.05;
+    box-shadow:0 12px 24px rgba(0,0,0,.55);
+  }
+  .centerSpin:disabled{ opacity:.5; cursor:not-allowed; }
 
-    .formCard{
-      flex:1 1 auto;
-      min-height:0;
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-    }
+  .wheelFooter{ display:flex; justify-content:space-between; gap:10px; align-items:flex-start; }
+  .footLeft{ font-size:11px; font-weight:1000; color:var(--orange); }
+  .footRight{ font-size:10.5px; color:rgba(255,255,255,.65); line-height:1.2; text-align:right; }
 
-    .formTitleRow{
-      display:flex;
-      justify-content:space-between;
-      align-items:baseline;
-      gap:10px;
-    }
-    .formTitle{ font-weight:1000; font-size:13px; }
-    .formHint{ font-size:11px; color:var(--muted); }
-
-    .formScroll{
-      flex:1 1 auto;
-      min-height:0;
-      overflow:auto;
-      padding-right:4px;
-    }
-    .formScroll::-webkit-scrollbar{ width:6px; }
-    .formScroll::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.14); border-radius:10px; }
-
-    .row2{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
-    }
-
-    .field{ display:flex; flex-direction:column; gap:6px; margin-bottom:10px; }
-    label{ font-size:11px; color:var(--muted); }
-
-    input{
-      height:40px;
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,.14);
-      background: rgba(255,255,255,.06);
-      color:var(--text);
-      padding:0 12px;
-      font-size:14px;
-      outline:none;
-    }
-    input:focus{
-      border-color: rgba(255,106,0,.7);
-      box-shadow: 0 0 0 4px rgba(255,106,0,.18);
-    }
-    .hint{ font-size:10.5px; color:rgba(255,255,255,.65); margin-top:-2px; }
-    .err{ font-size:10.5px; color:var(--bad); min-height:14px; }
-
-    .consentBlock{
-      margin-top:4px;
-      padding:10px;
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.04);
-    }
-    .checks{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-    }
-    .chk{
-      display:flex;
-      align-items:flex-start;
-      gap:10px;
-      font-size:11px;
-      color:var(--muted);
-      line-height:1.2;
-    }
-    .chk input{ width:auto; height:auto; margin-top:2px; }
-
-    .actionRow{
-      display:flex;
-      gap:10px;
-      align-items:center;
-    }
-    .statusText{
-      font-size:11px;
-      color:var(--muted);
-      line-height:1.2;
-      flex:1 1 auto;
-    }
-
-    .wheelCard{
-      flex:0 0 auto;
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-    }
-
-    .wheelTop{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-end;
-      gap:10px;
-    }
-    .wheelTitle{ font-weight:1000; font-size:13px; }
-    .wheelSub{ font-size:11px; color:var(--muted); text-align:right; }
-
-    .wheelZone{
-      position:relative;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      padding:6px 0;
-    }
-
-    /* pointer points DOWN into wheel */
-    .pointer{
-      position:absolute;
-      top:-2px;
-      width:0; height:0;
-      border-left:14px solid transparent;
-      border-right:14px solid transparent;
-      border-top:22px solid var(--yellow);
-      filter: drop-shadow(0 8px 14px rgba(0,0,0,.6));
-      z-index:5;
-    }
-
-    .wheelStage{
-      width:var(--wheel);
-      height:var(--wheel);
-      position:relative;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-    }
-
-    .rotator{
-      width:var(--wheel);
-      height:var(--wheel);
-      border-radius:50%;
-      transition: transform 3.8s cubic-bezier(.15,.85,.2,1);
-      filter: drop-shadow(0 18px 24px rgba(0,0,0,.65));
-      overflow:visible;
-    }
-
-    svg{ width:var(--wheel); height:var(--wheel); display:block; }
-
-    .centerSpin{
-      position:absolute;
-      width:var(--centerBtn);
-      height:var(--centerBtn);
-      border-radius:50%;
-      border:2px solid rgba(255,255,255,.25);
-      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.18), rgba(0,0,0,.55));
-      color:#fff;
-      font-weight:1000;
-      letter-spacing:.4px;
-      cursor:pointer;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      text-align:center;
-      line-height:1.05;
-      box-shadow: 0 12px 24px rgba(0,0,0,.55);
-      user-select:none;
-    }
-    .centerSpin:disabled{ opacity:.5; cursor:not-allowed; }
-
-    .wheelFooter{
-      display:flex;
-      justify-content:space-between;
-      gap:10px;
-      align-items:flex-start;
-    }
-    .footLeft{ font-size:11px; font-weight:1000; color:var(--orange); }
-    .footRight{ font-size:10.5px; color:rgba(255,255,255,.65); line-height:1.2; text-align:right; }
-
-    .modal{
-      position:fixed; inset:0;
-      display:flex; align-items:center; justify-content:center;
-      background: rgba(0,0,0,.6);
-      z-index:999;
-    }
-    .hidden{ display:none; }
-    .modalCard{
-      width:min(520px, 92vw);
-      border-radius:22px;
-      background: rgba(14,14,16,.94);
-      border:1px solid rgba(255,255,255,.18);
-      padding:18px;
-      box-shadow: var(--shadow);
-    }
-    .modalTitle{ font-weight:1000; font-size:16px; margin-bottom:8px; }
-    .modalBody{ white-space:pre-line; font-size:13px; color: rgba(255,255,255,.82); margin-bottom:14px; }
-    .modalOk{
-      height:44px; width:100%;
-      border:none; border-radius:14px;
-      background: linear-gradient(180deg, var(--orange), #ff7d24);
-      color:#111; font-weight:1000;
-      cursor:pointer;
-    }
-  </style>
+  .modal{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.6); z-index:999; }
+  .hidden{ display:none; }
+  .modalCard{
+    width:min(520px, 92vw);
+    border-radius:22px; background:rgba(14,14,16,.94);
+    border:1px solid rgba(255,255,255,.18);
+    padding:18px; box-shadow:var(--shadow);
+  }
+  .modalTitle{ font-weight:1000; font-size:16px; margin-bottom:8px; }
+  .modalBody{ white-space:pre-line; font-size:13px; color:rgba(255,255,255,.82); margin-bottom:14px; }
+  .modalOk{
+    height:44px; width:100%;
+    border:none; border-radius:14px;
+    background:linear-gradient(180deg, var(--orange), #ff7d24);
+    color:#111; font-weight:1000; cursor:pointer;
+  }
+</style>
 </head>
+
 <body>
-  <div class="matrix"></div>
+<div class="logoMatrix"></div>
+<div class="gridOverlay"></div>
 
-  <div class="app">
-    <header class="topbar">
-      <div class="brand">
-        <div class="logoWrap">
-          <img class="logo" id="logoImg" src="img/cl-logo.png" alt="Chicken Licken" />
-          <div class="logoFallback" id="logoFallback">CL</div>
-        </div>
-        <div class="brandText">
-          <div class="brandTitle" id="storeName">Chicken Licken Soul Spin</div>
-          <div class="brandSub">Qualify at <b id="qualText">R0+</b> and spin</div>
-        </div>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="logoWrap"><img class="logo" src="img/cl-logo.png" alt="Chicken Licken"></div>
+      <div class="brandText">
+        <div class="brandTitle" id="storeName">Chicken Licken Soul Spin</div>
+        <div class="brandSub">Qualify at <b id="qualText">R0+</b> and spin</div>
       </div>
-      <div class="pill" id="onlinePill">
-        <span class="dot"></span>
-        <span class="pillText" id="onlineText">Offline</span>
-      </div>
-    </header>
-
-    <main class="shell">
-      <div class="shellHead">
-        <div>
-          <div class="shellTitle">Soul Spin Kiosk</div>
-          <div class="formHint">Receipt goes in the store box for draw verification.</div>
-        </div>
-        <div class="shellMeta">
-          Device: <b id="deviceName">UNKNOWN</b><br/>
-          Store: <b id="storeIdLabel">-</b>
-        </div>
-      </div>
-
-      <div class="grid">
-        <section class="card formCard">
-          <div class="formTitleRow">
-            <div class="formTitle">Customer Details</div>
-            <div class="formHint">All fields required</div>
-          </div>
-
-          <div class="formScroll">
-            <div class="row2">
-              <div class="field">
-                <label>Name</label>
-                <input id="wName" placeholder="First name" autocomplete="off"/>
-              </div>
-              <div class="field">
-                <label>Surname</label>
-                <input id="wSurname" placeholder="Last name" autocomplete="off"/>
-              </div>
-            </div>
-
-            <div class="field">
-              <label>Email</label>
-              <input id="wEmail" placeholder="name@email.com" autocomplete="off"/>
-              <div class="err" id="errEmail"></div>
-            </div>
-
-            <div class="field">
-              <label>Phone (10 digits)</label>
-              <input id="wPhone" placeholder="0821234567" inputmode="numeric" autocomplete="off"/>
-              <div class="err" id="errPhone"></div>
-            </div>
-
-            <div class="row2">
-              <div class="field">
-                <label>Receipt Number</label>
-                <input id="wReceipt" placeholder="As printed on slip" autocomplete="off"/>
-              </div>
-              <div class="field">
-                <label>Basket Amount (R)</label>
-                <input id="wAmount" placeholder="115" inputmode="decimal" autocomplete="off"/>
-                <div class="hint">Minimum: <b id="minAmountLabel">R0</b></div>
-              </div>
-            </div>
-
-            <div class="field">
-              <label>Staff PIN</label>
-              <input id="wPin" placeholder="****" inputmode="numeric" autocomplete="off"/>
-              <div class="hint">Ask cashier for today’s PIN</div>
-            </div>
-
-            <div class="consentBlock">
-              <div class="checks">
-                <label class="chk"><input type="checkbox" id="wPopia"/> <span>I consent to POPIA processing</span></label>
-                <label class="chk"><input type="checkbox" id="wMarketing"/> <span>I agree to receive marketing</span></label>
-              </div>
-            </div>
-          </div>
-
-          <div class="actionRow">
-            <div class="statusText" id="spinStatus">Loading store rules…</div>
-          </div>
-        </section>
-
-        <section class="card wheelCard">
-          <div class="wheelTop">
-            <div class="wheelTitle">Wheel</div>
-            <div class="wheelSub" id="wheelSub">Fill in details to unlock</div>
-          </div>
-
-          <div class="wheelZone">
-            <div class="pointer"></div>
-            <div class="wheelStage">
-              <div class="rotator" id="wheelRotator">
-                <svg id="wheelSvg" viewBox="0 0 400 400"></svg>
-              </div>
-              <button class="centerSpin" id="centerSpin" disabled>SPIN<br/>THE<br/>WHEEL</button>
-            </div>
-          </div>
-
-          <div class="wheelFooter">
-            <div class="footLeft" id="footLeft">Loading…</div>
-            <div class="footRight">Keep receipt. If you enter a draw, drop it in the box.</div>
-          </div>
-        </section>
-      </div>
-    </main>
-  </div>
-
-  <div class="modal hidden" id="modal">
-    <div class="modalCard">
-      <div class="modalTitle" id="mTitle">Title</div>
-      <div class="modalBody" id="mBody">Body</div>
-      <button class="modalOk" id="mOk">OK</button>
     </div>
+    <div class="pill" id="onlinePill"><span class="dot"></span><span class="pillText" id="onlineText">Offline</span></div>
+  </header>
+
+  <main class="shell">
+    <div class="shellHead">
+      <div>
+        <div class="shellTitle">Soul Spin Kiosk</div>
+        <div class="formHint">Receipt goes in the store box for draw verification.</div>
+      </div>
+      <div class="shellMeta">
+        Device: <b id="deviceName">UNKNOWN</b><br>
+        Store: <b id="storeIdLabel">-</b>
+      </div>
+    </div>
+
+    <div class="grid">
+      <section class="card formCard">
+        <div class="formTitleRow">
+          <div class="formTitle">Customer Details</div>
+          <div class="formHint">All fields required</div>
+        </div>
+
+        <div class="formScroll" id="formScroll">
+          <div class="row2">
+            <div class="field"><label>Name</label><input id="wName" autocomplete="off"></div>
+            <div class="field"><label>Surname</label><input id="wSurname" autocomplete="off"></div>
+          </div>
+
+          <div class="field">
+            <label>Email</label><input id="wEmail" autocomplete="off">
+            <div class="err" id="errEmail"></div>
+          </div>
+
+          <div class="field">
+            <label>Phone (10 digits)</label><input id="wPhone" inputmode="numeric" autocomplete="off">
+            <div class="err" id="errPhone"></div>
+          </div>
+
+          <div class="row2">
+            <div class="field"><label>Receipt Number</label><input id="wReceipt" autocomplete="off"></div>
+            <div class="field">
+              <label>Basket Amount (R)</label><input id="wAmount" inputmode="decimal" autocomplete="off">
+              <div class="hint">Minimum: <b id="minAmountLabel">R0</b></div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Staff PIN</label><input id="wPin" inputmode="numeric" autocomplete="off">
+            <div class="hint">Ask cashier for today’s PIN</div>
+          </div>
+
+          <div class="consentBlock">
+            <div class="checks">
+              <label class="chk"><input type="checkbox" id="wPopia"> <span>I consent to POPIA processing</span></label>
+              <label class="chk"><input type="checkbox" id="wMarketing"> <span>I agree to receive marketing</span></label>
+            </div>
+          </div>
+        </div>
+
+        <div class="statusText" id="spinStatus">Loading store rules…</div>
+      </section>
+
+      <section class="card wheelCard">
+        <div class="wheelTop">
+          <div class="wheelTitle">Wheel</div>
+          <div class="wheelSub" id="wheelSub">Fill in details to unlock</div>
+        </div>
+
+        <div class="wheelZone">
+          <div class="pointer"></div>
+          <div class="wheelStage">
+            <div class="rotator" id="wheelRotator"><svg id="wheelSvg" viewBox="0 0 400 400"></svg></div>
+            <button class="centerSpin" id="centerSpin" disabled>SPIN<br>THE<br>WHEEL</button>
+          </div>
+        </div>
+
+        <div class="wheelFooter">
+          <div class="footLeft" id="footLeft">Loading…</div>
+          <div class="footRight">Keep receipt. If you enter a draw, drop it in the box.</div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<div class="modal hidden" id="modal">
+  <div class="modalCard">
+    <div class="modalTitle" id="mTitle"></div>
+    <div class="modalBody" id="mBody"></div>
+    <button class="modalOk" id="mOk">OK</button>
   </div>
+</div>
 
-  <script>
-    /************** EDIT THESE **************/
-    const API_URL = "https://script.google.com/macros/s/AKfycbzlNM3N7-a7OnEzpgjF4U0EwpqUIIqC8nkqgUFtza1fZpKd1rZ4nlVv5j_GPYhDlA0g/exec"; // must end with /exec
-    const STORE_SECRETS = { "CL-001": "HV-SECRET-2025" };
-    /***************************************/
+<script>
+/************** EDIT THESE **************/
+const API_URL = "https://script.google.com/macros/s/AKfycby4yd2dwRBlbY6PmzeCuZZd5kPS_qXvZkslqBOevdU-EqWLVlrDQP0-dKcbmnBdjYhh/exec"; // must end with /exec
+const STORE_SECRETS = { "CL-001": "HV-SECRET-2025" };
+/***************************************/
 
-    const $ = (id) => document.getElementById(id);
-    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+const $ = (id)=>document.getElementById(id);
+const sleep = (ms)=>new Promise(r=>setTimeout(r, ms));
+const N = 10;
+const STEP_DEG = 360 / N;
 
-    function getParam(name){
-      const m = new RegExp(`[?&]${name}=([^&]+)`, "i").exec(location.search);
-      return m ? decodeURIComponent(m[1]) : null;
+function getParam(name){
+  const m = new RegExp(`[?&]${name}=([^&]+)`, "i").exec(location.search);
+  return m ? decodeURIComponent(m[1]) : null;
+}
+function sanitizePhone(raw){ return String(raw||"").replace(/\D+/g,"").slice(0,10); }
+function normalizeEmail(e){ return String(e||"").trim().toLowerCase(); }
+function isValidEmail(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(normalizeEmail(e)); }
+
+function openModal(title, body){
+  $("mTitle").innerText = title;
+  $("mBody").innerText = body;
+  $("modal").classList.remove("hidden");
+}
+function closeModal(){ $("modal").classList.add("hidden"); }
+
+function setOnlineUI(on){
+  const dot = $("onlinePill").querySelector(".dot");
+  $("onlineText").innerText = on ? "Online" : "Offline";
+  dot.style.background = on ? "#34c759" : "#ff3b30";
+  dot.style.boxShadow = on ? "0 0 0 4px rgba(52,199,89,.18)" : "0 0 0 4px rgba(255,59,48,.18)";
+}
+
+function apiJSONP(params, timeoutMs=15000){
+  return new Promise((resolve)=>{
+    const cbName = `cb_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+    const qs = new URLSearchParams({ ...params, callback: cbName }).toString();
+    const url = `${API_URL}?${qs}`;
+
+    let done=false;
+    const timer=setTimeout(()=>{
+      if(done) return;
+      done=true; cleanup();
+      resolve({ ok:false, error:"timeout", detail:"API timeout" });
+    }, timeoutMs);
+
+    function cleanup(){
+      clearTimeout(timer);
+      try{ delete window[cbName]; }catch(e){}
+      try{ script.remove(); }catch(e){}
     }
 
-    function sanitizePhone(raw){ return String(raw||"").replace(/\D+/g,""); }
-    function normalizeEmail(e){ return String(e||"").trim().toLowerCase(); }
-    function isValidEmail(e){
-      e = normalizeEmail(e);
-      if(!e.includes("@")) return false;
-      if(e.startsWith("@") || e.endsWith("@")) return false;
-      if(e.includes("..")) return false;
-      return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e);
-    }
+    window[cbName]=(data)=>{
+      if(done) return;
+      done=true; cleanup();
+      resolve(data);
+    };
 
-    function openModal(title, body){
-      $("mTitle").innerText = title;
-      $("mBody").innerText = body;
-      $("modal").classList.remove("hidden");
-    }
-    function closeModal(){ $("modal").classList.add("hidden"); }
+    const script=document.createElement("script");
+    script.src=url;
+    script.onerror=()=>{
+      if(done) return;
+      done=true; cleanup();
+      resolve({ ok:false, error:"network", detail:"Could not reach API" });
+    };
+    document.body.appendChild(script);
+  });
+}
+async function apiJSONPWithRetry(params, attempts=2){
+  for(let i=0;i<attempts;i++){
+    const res = await apiJSONP(params, 15000);
+    if(res && res.ok) return res;
+    if(!res || (res.error!=="timeout" && res.error!=="network")) return res;
+    await sleep(400 + i*600);
+  }
+  return { ok:false, error:"timeout", detail:"API timeout after retries" };
+}
 
-    function setOnlineUI(on){
-      const dot = $("onlinePill").querySelector(".dot");
-      $("onlineText").innerText = on ? "Online" : "Offline";
-      dot.style.background = on ? "#34c759" : "#ff3b30";
-      dot.style.boxShadow = on ? "0 0 0 4px rgba(52,199,89,.18)" : "0 0 0 4px rgba(255,59,48,.18)";
-    }
+const STORE_ID = getParam("store") || "";
+const DEVICE_ID = (function(){
+  const fromUrl = getParam("device");
+  if(fromUrl){ localStorage.setItem("cl_device_id", fromUrl); return fromUrl; }
+  return localStorage.getItem("cl_device_id") || "UNKNOWN";
+})();
 
-    function apiJSONP(params, timeoutMs=15000){
-      return new Promise((resolve) => {
-        const cbName = `cb_${Date.now()}_${Math.random().toString(16).slice(2)}`;
-        const qs = new URLSearchParams({ ...params, callback: cbName }).toString();
-        const url = `${API_URL}?${qs}`;
+let CFG=null;
+let spinning=false;
+let wheelRotation=0;
 
-        let done = false;
-        const timer = setTimeout(() => {
-          if(done) return;
-          done = true;
-          cleanup();
-          resolve({ ok:false, error:"timeout", detail:"API timeout" });
-        }, timeoutMs);
+document.addEventListener("DOMContentLoaded", async ()=>{
+  $("deviceName").innerText = DEVICE_ID;
+  $("storeIdLabel").innerText = STORE_ID || "-";
+  $("mOk").addEventListener("click", closeModal);
+  $("centerSpin").addEventListener("click", spin);
 
-        function cleanup(){
-          clearTimeout(timer);
-          try { delete window[cbName]; } catch(e){}
-          try { script.remove(); } catch(e){}
-        }
+  drawWheelFallback();
+  wireValidation();
 
-        window[cbName] = (data) => {
-          if(done) return;
-          done = true;
-          cleanup();
-          resolve(data);
-        };
+  if(!STORE_ID){ setOnlineUI(false); openModal("Missing store","Use URL like:\n?store=CL-001&device=TAB-A9-HIGHVELD-01"); return; }
+  const secret = STORE_SECRETS[STORE_ID];
+  if(!secret){ setOnlineUI(false); openModal("Missing secret",`No secret configured for ${STORE_ID}`); return; }
+  if(!API_URL.includes("/exec")){ setOnlineUI(false); openModal("Bad API URL","API_URL must be your Apps Script /exec link."); return; }
 
-        const script = document.createElement("script");
-        script.src = url;
-        script.onerror = () => {
-          if(done) return;
-          done = true;
-          cleanup();
-          resolve({ ok:false, error:"network", detail:"Could not reach API" });
-        };
+  const res = await apiJSONPWithRetry({
+    action:"getconfig",
+    storeId:STORE_ID,
+    storeSecret:secret,
+    deviceId:DEVICE_ID
+  }, 2);
 
-        document.body.appendChild(script);
-      });
-    }
+  if(!res.ok){ setOnlineUI(false); openModal("Setup blocked", `${res.error}\n${res.detail||""}`); return; }
+  if(!res.prizes || res.prizes.length !== 10){
+    setOnlineUI(false);
+    openModal("Prizes misconfigured","You must have exactly 10 active prize rows per store (OrderIndex 1..10).");
+    return;
+  }
 
-    async function apiJSONPWithRetry(params, attempts=2){
-      for(let i=0;i<attempts;i++){
-        const res = await apiJSONP(params, 15000);
-        if(res && res.ok) return res;
-        if(!res || (res.error!=="timeout" && res.error!=="network")) return res;
-        await sleep(400 + i*600);
-      }
-      return { ok:false, error:"timeout", detail:"API timeout after retries" };
-    }
+  CFG = res;
+  setOnlineUI(true);
 
-    const STORE_ID = getParam("store") || "";
-    const DEVICE_ID = (function(){
-      const fromUrl = getParam("device");
-      if(fromUrl){
-        localStorage.setItem("cl_device_id", fromUrl);
-        return fromUrl;
-      }
-      return localStorage.getItem("cl_device_id") || "UNKNOWN";
-    })();
+  $("storeName").innerText = CFG.store.name;
+  $("minAmountLabel").innerText = `R${CFG.store.qualifyAmount}`;
+  $("qualText").innerText = `R${CFG.store.qualifyAmount}+`;
+  $("footLeft").innerText = `Qualify at R${CFG.store.qualifyAmount}+`;
 
-    let CFG = null;
-    let spinning = false;
-    let wheelRotation = 0;
+  drawWheelFromConfig(CFG.prizes);
+  validateAndUpdate();
+});
 
-    document.addEventListener("DOMContentLoaded", async () => {
-      // Logo fallback
-      const logo = $("logoImg");
-      logo.addEventListener("error", () => {
-        logo.style.display = "none";
-        $("logoFallback").style.display = "grid";
-      });
-
-      $("deviceName").innerText = DEVICE_ID;
-      $("storeIdLabel").innerText = STORE_ID || "-";
-      $("mOk").addEventListener("click", closeModal);
-      $("centerSpin").addEventListener("click", spin);
-
-      drawWheelFallback();
-      wireValidation();
-
-      if(!STORE_ID){
-        setOnlineUI(false);
-        openModal("Missing store", "Your URL must include:\n?store=CL-001&device=TAB-A9-HIGHVELD-01");
-        return;
-      }
-
-      const secret = STORE_SECRETS[STORE_ID];
-      if(!secret){
-        setOnlineUI(false);
-        openModal("Missing secret", `No StoreSecret configured in this file for ${STORE_ID}`);
-        return;
-      }
-
-      if(!API_URL.includes("/exec")){
-        setOnlineUI(false);
-        openModal("Bad API URL", "API_URL must be your Apps Script /exec link.");
-        return;
-      }
-
-      const res = await apiJSONPWithRetry({
-        action: "getconfig",
-        storeId: STORE_ID,
-        storeSecret: secret,
-        deviceId: DEVICE_ID
-      }, 2);
-
-      if(!res.ok){
-        setOnlineUI(false);
-        openModal("Setup blocked", `${res.error}\n${res.detail || ""}\n\nVersion: ${res._version || "unknown"}`);
-        return;
-      }
-
-      CFG = res;
-      setOnlineUI(true);
-
-      $("storeName").innerText = CFG.store.name;
-      $("minAmountLabel").innerText = `R${CFG.store.qualifyAmount}`;
-      $("qualText").innerText = `R${CFG.store.qualifyAmount}+`;
-      $("footLeft").innerText = `Qualify at R${CFG.store.qualifyAmount}+`;
-
-      drawWheelFromConfig(CFG.prizes);
+function wireValidation(){
+  const ids=["wName","wSurname","wEmail","wPhone","wReceipt","wAmount","wPin","wPopia","wMarketing"];
+  ids.forEach(id=>{
+    const el=$(id);
+    el.addEventListener(el.type==="checkbox" ? "change" : "input", ()=>{
+      if(id==="wPhone") el.value = sanitizePhone(el.value);
       validateAndUpdate();
     });
+  });
+}
 
-    function wireValidation(){
-      const ids = ["wName","wSurname","wEmail","wPhone","wReceipt","wAmount","wPin","wPopia","wMarketing"];
-      ids.forEach(id => {
-        const el = $(id);
-        el.addEventListener(el.type==="checkbox" ? "change" : "input", () => {
-          if(id==="wPhone"){
-            el.value = sanitizePhone(el.value).slice(0,10); // hard cap 10 digits
-          }
-          validateAndUpdate();
-        });
-      });
+function validateAndUpdate(){
+  $("errEmail").innerText="";
+  $("errPhone").innerText="";
+
+  if(!CFG){
+    setStatus("Loading store rules…", false);
+    $("centerSpin").disabled=true;
+    return;
+  }
+
+  const name=$("wName").value.trim();
+  const surname=$("wSurname").value.trim();
+  const email=normalizeEmail($("wEmail").value);
+  const phone=sanitizePhone($("wPhone").value);
+  const receipt=$("wReceipt").value.trim();
+  const amount=Number($("wAmount").value||0);
+  const pin=$("wPin").value.trim();
+  const popia=$("wPopia").checked;
+  const marketing=$("wMarketing").checked;
+
+  if(!name || !surname){ setStatus("Name + surname required", false); $("centerSpin").disabled=true; return; }
+  if(!email){ $("errEmail").innerText="Email is required."; setStatus("Email required", false); $("centerSpin").disabled=true; return; }
+  if(!isValidEmail(email)){ $("errEmail").innerText="Enter a valid email."; setStatus("Fix email to continue", false); $("centerSpin").disabled=true; return; }
+  if(!phone){ $("errPhone").innerText="Phone is required."; setStatus("Phone required", false); $("centerSpin").disabled=true; return; }
+  if(phone.length!==10){ $("errPhone").innerText="Phone must be exactly 10 digits."; setStatus("Fix phone to continue", false); $("centerSpin").disabled=true; return; }
+
+  if(!receipt || !amount || !pin){ setStatus("Complete all fields to unlock SPIN", false); $("centerSpin").disabled=true; return; }
+  if(!popia || !marketing){ setStatus("POPIA + marketing consent required", false); $("centerSpin").disabled=true; return; }
+  if(amount < Number(CFG.store.qualifyAmount)){ setStatus(`Not qualified. Minimum R${CFG.store.qualifyAmount}`, false); $("centerSpin").disabled=true; return; }
+
+  setStatus("Ready. Tap the center button to spin!", true);
+  $("centerSpin").disabled=false;
+}
+
+function setStatus(msg, ok){
+  $("spinStatus").innerHTML = ok ? `<b style="color:#34c759">${msg}</b>` : msg;
+  $("wheelSub").innerText = ok ? "Tap the center button to spin" : "Fill details to unlock";
+}
+
+function resetFormHard(){
+  $("wName").value="";
+  $("wSurname").value="";
+  $("wEmail").value="";
+  $("wPhone").value="";
+  $("wReceipt").value="";
+  $("wAmount").value="";
+  $("wPin").value="";
+  $("wPopia").checked=false;
+  $("wMarketing").checked=false;
+  $("errEmail").innerText="";
+  $("errPhone").innerText="";
+  $("formScroll").scrollTop=0;
+  validateAndUpdate();
+}
+
+function drawWheelFallback(){
+  drawWheel([
+    {name:"FREE CHIPS"},
+    {name:"TRY AGAIN"},
+    {name:"FREE WINGS"},
+    {name:"TRY AGAIN"},
+    {name:"10% OFF"},
+    {name:"TRY AGAIN"},
+    {name:"FREE DRINK"},
+    {name:"TRY AGAIN"},
+    {name:"GRAND DRAW"},
+    {name:"TRY AGAIN"}
+  ]);
+}
+function drawWheelFromConfig(prizes){
+  drawWheel(prizes.map(p=>({ name:p.name||"TRY AGAIN" })));
+}
+
+// Wedge 0 centered under top pointer
+function drawWheel(wedges){
+  const svg=$("wheelSvg");
+  svg.innerHTML="";
+  const cx=200, cy=200, r=190;
+  const step=(Math.PI*2)/10;
+  const fills=["#ff6a00","#10131b","#ff6a00","#10131b","#ff6a00","#10131b","#ff6a00","#10131b","#e5392d","#10131b"];
+
+  for(let i=0;i<10;i++){
+    const start = -Math.PI/2 - step/2 + i*step;
+    const end = start + step;
+
+    const path=document.createElementNS("http://www.w3.org/2000/svg","path");
+    path.setAttribute("d", wedgePath(cx,cy,r,start,end));
+    path.setAttribute("fill", fills[i%fills.length]);
+    path.setAttribute("stroke","rgba(255,255,255,.14)");
+    path.setAttribute("stroke-width","2");
+    svg.appendChild(path);
+
+    const label=(wedges[i]?.name||"TRY AGAIN");
+    const mid=(start+end)/2;
+
+    const tx=cx + Math.cos(mid)*128;
+    const ty=cy + Math.sin(mid)*128;
+
+    const text=document.createElementNS("http://www.w3.org/2000/svg","text");
+    text.setAttribute("x",tx); text.setAttribute("y",ty);
+    text.setAttribute("text-anchor","middle");
+    text.setAttribute("dominant-baseline","middle");
+    text.setAttribute("font-size","11");
+    text.setAttribute("font-weight","1000");
+    text.setAttribute("fill","#fff");
+    const rot=(mid*180/Math.PI)+90;
+    text.setAttribute("transform",`rotate(${rot} ${tx} ${ty})`);
+
+    const words=String(label).split(" ");
+    const line1=words.slice(0,2).join(" ").toUpperCase();
+    const line2=words.slice(2).join(" ").toUpperCase();
+
+    const t1=document.createElementNS("http://www.w3.org/2000/svg","tspan");
+    t1.setAttribute("x",tx); t1.textContent=line1;
+    text.appendChild(t1);
+
+    if(line2){
+      const t2=document.createElementNS("http://www.w3.org/2000/svg","tspan");
+      t2.setAttribute("x",tx); t2.setAttribute("dy","12"); t2.textContent=line2;
+      text.appendChild(t2);
     }
 
-    function validateAndUpdate(){
-      $("errEmail").innerText = "";
-      $("errPhone").innerText = "";
+    svg.appendChild(text);
+  }
 
-      const name = $("wName").value.trim();
-      const surname = $("wSurname").value.trim();
-      const email = normalizeEmail($("wEmail").value);
-      const phone = sanitizePhone($("wPhone").value).slice(0,10);
-      const receipt = $("wReceipt").value.trim();
-      const amount = Number($("wAmount").value || 0);
-      const pin = $("wPin").value.trim();
-      const popia = $("wPopia").checked;
-      const marketing = $("wMarketing").checked;
+  const ring=document.createElementNS("http://www.w3.org/2000/svg","circle");
+  ring.setAttribute("cx",cx); ring.setAttribute("cy",cy); ring.setAttribute("r","192");
+  ring.setAttribute("fill","none");
+  ring.setAttribute("stroke","rgba(255,255,255,.18)");
+  ring.setAttribute("stroke-width","4");
+  svg.appendChild(ring);
 
-      if(!CFG){
-        setStatus("Loading store rules…", false);
-        $("centerSpin").disabled = true;
-        return;
-      }
+  const center=document.createElementNS("http://www.w3.org/2000/svg","circle");
+  center.setAttribute("cx",cx); center.setAttribute("cy",cy); center.setAttribute("r","78");
+  center.setAttribute("fill","rgba(0,0,0,.25)");
+  center.setAttribute("stroke","rgba(255,255,255,.25)");
+  center.setAttribute("stroke-width","2");
+  svg.appendChild(center);
+}
+function wedgePath(cx,cy,r,start,end){
+  const x1=cx+Math.cos(start)*r, y1=cy+Math.sin(start)*r;
+  const x2=cx+Math.cos(end)*r, y2=cy+Math.sin(end)*r;
+  const largeArc=(end-start)>Math.PI?1:0;
+  return `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`;
+}
+function norm360(deg){ let x=deg%360; if(x<0) x+=360; return x; }
 
-      if(!name || !surname || !email || !phone || !receipt || !amount || !pin){
-        setStatus("Complete all fields to unlock SPIN", false);
-        $("centerSpin").disabled = true;
-        return;
-      }
+async function spin(){
+  if(spinning) return;
+  if($("centerSpin").disabled) return;
 
-      if(!isValidEmail(email)){
-        $("errEmail").innerText = "Enter a valid email (must include @ and domain).";
-        setStatus("Fix email to continue", false);
-        $("centerSpin").disabled = true;
-        return;
-      }
+  spinning=true;
+  $("centerSpin").disabled=true;
 
-      if(phone.length !== 10){
-        $("errPhone").innerText = "Phone must be exactly 10 digits.";
-        setStatus("Fix phone to continue", false);
-        $("centerSpin").disabled = true;
-        return;
-      }
+  const res = await apiJSONPWithRetry({
+    action:"spin",
+    storeId:STORE_ID,
+    storeSecret:STORE_SECRETS[STORE_ID],
+    deviceId:DEVICE_ID,
+    name:$("wName").value.trim(),
+    surname:$("wSurname").value.trim(),
+    email:normalizeEmail($("wEmail").value),
+    phone:sanitizePhone($("wPhone").value),
+    receiptNumber:$("wReceipt").value.trim(),
+    basketAmount:Number($("wAmount").value||0),
+    popia:$("wPopia").checked ? "true" : "false",
+    marketing:$("wMarketing").checked ? "true" : "false",
+    cashierPin:$("wPin").value.trim()
+  }, 2);
 
-      if(!popia || !marketing){
-        setStatus("POPIA + marketing consent required", false);
-        $("centerSpin").disabled = true;
-        return;
-      }
+  if(!res.ok){
+    setOnlineUI(false);
+    openModal("Spin blocked", `${res.error}\n${res.detail||""}`);
+    spinning=false;
+    resetFormHard();
+    return;
+  }
 
-      if(amount < Number(CFG.store.qualifyAmount)){
-        setStatus(`Not qualified. Minimum R${CFG.store.qualifyAmount}`, false);
-        $("centerSpin").disabled = true;
-        return;
-      }
+  setOnlineUI(true);
 
-      setStatus("Ready. Tap the center button to spin!", true);
-      $("centerSpin").disabled = false;
-    }
+  const idx = (typeof res.wedgeIndex === "number") ? res.wedgeIndex : -1;
+  if(!CFG || !CFG.prizes || idx < 0 || idx > 9){
+    openModal("Config error", `Invalid wedgeIndex returned: ${idx}`);
+    spinning=false;
+    resetFormHard();
+    return;
+  }
 
-    function setStatus(msg, ok){
-      $("spinStatus").innerHTML = ok ? `<b style="color:#34c759">${msg}</b>` : msg;
-      $("wheelSub").innerText = ok ? "Tap the center button to spin" : "Fill details to unlock";
-    }
+  // Prevent “double spin feeling”
+  const currentNorm = norm360(wheelRotation);
+  wheelRotation = wheelRotation - currentNorm;
 
-    function drawWheelFallback(){
-      const demo = [
-        {name:"FREE CHIPS", imageUrl:""},
-        {name:"TRY AGAIN", imageUrl:""},
-        {name:"FREE WINGS", imageUrl:""},
-        {name:"TRY AGAIN", imageUrl:""},
-        {name:"DRAW ENTRY", imageUrl:""},
-        {name:"TRY AGAIN", imageUrl:""},
-        {name:"FREE DRINK", imageUrl:""},
-        {name:"TRY AGAIN", imageUrl:""},
-        {name:"GRAND DRAW", imageUrl:""},
-        {name:"TRY AGAIN", imageUrl:""}
-      ];
-      drawWheel(demo);
-    }
+  // Land wedge idx at top pointer
+  const targetDeg = -(idx * STEP_DEG);
+  wheelRotation = wheelRotation + (6*360) + targetDeg;
+  $("wheelRotator").style.transform = `rotate(${wheelRotation}deg)`;
 
-    function drawWheelFromConfig(prizes){
-      const wedges = (prizes||[]).slice(0,10).map(p => ({
-        name: p.name || "TRY AGAIN",
-        imageUrl: (p.imageUrl || "").trim()
-      }));
-      while(wedges.length < 10) wedges.push({name:"TRY AGAIN", imageUrl:""});
-      drawWheel(wedges);
-    }
+  await sleep(3900);
 
-    /* WEDGE IMAGES LATER:
-       Put a PUBLIC URL into Prizes.ImageURL.
-       That image will render on that wedge.
-    */
-    function drawWheel(wedges){
-      const svg = $("wheelSvg");
-      svg.innerHTML = "";
+  // Message MUST match wedge index result
+  const wedge = CFG.prizes[idx];
+  const prizeName = wedge.name || res.prizeName || "TRY AGAIN";
+  const prizeType = (wedge.type || res.prizeType || "lose").toLowerCase();
 
-      const n=10, cx=200, cy=200, r=190;
-      const step=(Math.PI*2)/n;
+  if(prizeType==="win"){
+    openModal("🍗 SOUL GOOD! YOU WON!", `Prize: ${prizeName}\n\nCode: ${res.prizeCode||""}\n\nWe emailed your code.\nKeep your receipt.`);
+  } else if(prizeType==="draw"){
+    openModal("🔥 YOU’RE IN THE DRAW!", `Entry: ${prizeName}\n\nEntry Code: ${res.prizeCode||""}\n\nWe emailed your code.\nDrop your receipt in the box.`);
+  } else {
+    openModal("😅 NOT THIS TIME…", `No prize on this spin.\n\nSpend R${res.qualifyAmount}+ again to qualify.\nMore chicken = more chances. 🍗`);
+  }
 
-      const fills = ["#ff6a00","#10131b","#ff6a00","#10131b","#ff6a00","#10131b","#ff6a00","#10131b","#e5392d","#10131b"];
-
-      for(let i=0;i<n;i++){
-        const start = -Math.PI/2 + i*step;
-        const end = start + step;
-
-        const path = document.createElementNS("http://www.w3.org/2000/svg","path");
-        path.setAttribute("d", wedgePath(cx,cy,r,start,end));
-        path.setAttribute("fill", fills[i % fills.length]);
-        path.setAttribute("stroke","rgba(255,255,255,.14)");
-        path.setAttribute("stroke-width","2");
-        svg.appendChild(path);
-
-        const label = (wedges[i]?.name || "TRY AGAIN");
-        const imgUrl = (wedges[i]?.imageUrl || "").trim();
-        const mid=(start+end)/2;
-
-        if(imgUrl){
-          const ix = cx + Math.cos(mid)*118 - 26;
-          const iy = cy + Math.sin(mid)*118 - 26;
-
-          const img = document.createElementNS("http://www.w3.org/2000/svg","image");
-          img.setAttributeNS("http://www.w3.org/1999/xlink","href", imgUrl);
-          img.setAttribute("x", ix);
-          img.setAttribute("y", iy);
-          img.setAttribute("width", "52");
-          img.setAttribute("height", "52");
-          const rot=(mid*180/Math.PI)+90;
-          img.setAttribute("transform", `rotate(${rot} ${ix+26} ${iy+26})`);
-          svg.appendChild(img);
-        }
-
-        const tx=cx + Math.cos(mid)*128;
-        const ty=cy + Math.sin(mid)*128;
-
-        const text = document.createElementNS("http://www.w3.org/2000/svg","text");
-        text.setAttribute("x",tx);
-        text.setAttribute("y",ty);
-        text.setAttribute("text-anchor","middle");
-        text.setAttribute("dominant-baseline","middle");
-        text.setAttribute("font-size","11");
-        text.setAttribute("font-weight","1000");
-        text.setAttribute("fill","#fff");
-
-        const rot=(mid*180/Math.PI)+90;
-        text.setAttribute("transform",`rotate(${rot} ${tx} ${ty})`);
-
-        const words = String(label).split(" ");
-        const line1 = words.slice(0,2).join(" ").toUpperCase();
-        const line2 = words.slice(2).join(" ").toUpperCase();
-
-        const t1 = document.createElementNS("http://www.w3.org/2000/svg","tspan");
-        t1.setAttribute("x",tx);
-        t1.textContent = line1;
-        text.appendChild(t1);
-
-        if(line2){
-          const t2 = document.createElementNS("http://www.w3.org/2000/svg","tspan");
-          t2.setAttribute("x",tx);
-          t2.setAttribute("dy","12");
-          t2.textContent = line2;
-          text.appendChild(t2);
-        }
-
-        svg.appendChild(text);
-      }
-
-      const ring = document.createElementNS("http://www.w3.org/2000/svg","circle");
-      ring.setAttribute("cx",cx); ring.setAttribute("cy",cy); ring.setAttribute("r","192");
-      ring.setAttribute("fill","none");
-      ring.setAttribute("stroke","rgba(255,255,255,.18)");
-      ring.setAttribute("stroke-width","4");
-      svg.appendChild(ring);
-
-      const center = document.createElementNS("http://www.w3.org/2000/svg","circle");
-      center.setAttribute("cx",cx); center.setAttribute("cy",cy); center.setAttribute("r","78");
-      center.setAttribute("fill","rgba(0,0,0,.25)");
-      center.setAttribute("stroke","rgba(255,255,255,.25)");
-      center.setAttribute("stroke-width","2");
-      svg.appendChild(center);
-    }
-
-    function wedgePath(cx,cy,r,start,end){
-      const x1=cx+Math.cos(start)*r, y1=cy+Math.sin(start)*r;
-      const x2=cx+Math.cos(end)*r, y2=cy+Math.sin(end)*r;
-      const largeArc=(end-start)>Math.PI?1:0;
-      return `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`;
-    }
-
-    async function spin(){
-      if(spinning) return;
-      if($("centerSpin").disabled) return;
-
-      spinning = true;
-      $("centerSpin").disabled = true;
-
-      // Instant movement
-      wheelRotation += (2*360) + (Math.random()*360);
-      $("wheelRotator").style.transform = `rotate(${wheelRotation}deg)`;
-
-      const resPromise = apiJSONPWithRetry({
-        action: "spin",
-        storeId: STORE_ID,
-        storeSecret: STORE_SECRETS[STORE_ID],
-        deviceId: DEVICE_ID,
-
-        name: $("wName").value.trim(),
-        surname: $("wSurname").value.trim(),
-        email: normalizeEmail($("wEmail").value),
-        phone: sanitizePhone($("wPhone").value).slice(0,10),
-        receiptNumber: $("wReceipt").value.trim(),
-        basketAmount: Number($("wAmount").value || 0),
-
-        popia: $("wPopia").checked ? "true" : "false",
-        marketing: $("wMarketing").checked ? "true" : "false",
-        cashierPin: $("wPin").value.trim()
-      }, 2);
-
-      // wait enough for animation to feel smooth
-      const [res] = await Promise.all([resPromise, sleep(2400)]);
-
-      if(!res.ok){
-        setOnlineUI(false);
-        openModal("Spin blocked", `${res.error}\n${res.detail || ""}\n\nVersion: ${res._version || "unknown"}`);
-        spinning = false;
-        validateAndUpdate();
-        return;
-      }
-
-      setOnlineUI(true);
-
-      // FORCE wheel to land on backend-selected wedge
-      if (typeof res.wedgeIndex === "number" && res.wedgeIndex >= 0) {
-        const n = 10;
-        const step = 360 / n;
-        const wedgeCenter = (res.wedgeIndex * step) + (step / 2);
-        const landing = -wedgeCenter;
-
-        wheelRotation = (Math.floor(wheelRotation / 360) * 360) + (5 * 360) + landing;
-        $("wheelRotator").style.transform = `rotate(${wheelRotation}deg)`;
-
-        // let it finish
-        await sleep(1700);
-      }
-
-      if(res.result === "Win"){
-        openModal("🍗 SOUL GOOD! YOU WON!",
-          `Prize: ${res.prizeName}\n\nCode: ${res.prizeCode}\n\nWe emailed your code.\nKeep your receipt.`);
-      } else if(res.result === "GrandEntry"){
-        openModal("🔥 YOU’RE IN THE DRAW!",
-          `Entry: ${res.prizeName}\n\nEntry Code: ${res.prizeCode}\n\nWe emailed your code.\nDrop your receipt in the box.`);
-      } else {
-        openModal("😅 NOT THIS TIME…",
-          `No prize on this spin.\n\nSpend R${res.qualifyAmount}+ again to qualify.\nMore chicken = more chances. 🍗`);
-      }
-
-      spinning = false;
-      validateAndUpdate();
-    }
-  </script>
+  spinning=false;
+  resetFormHard(); // forces re-entry to prevent spam
+}
+</script>
 </body>
 </html>
