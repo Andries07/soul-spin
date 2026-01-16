@@ -38,13 +38,13 @@
       linear-gradient(180deg, var(--bg1), var(--bg0));
   }
 
-  /* Matrix background using img/cl-logo.png */
+  /* Matrix background using img/cl-logo.png (more visible) */
   .logoMatrix{
     position:fixed; inset:0; pointer-events:none;
     background-image:url("img/cl-logo.png");
     background-repeat:repeat;
     background-size:120px 120px;
-    opacity:.07;
+    opacity:.14; /* increased visibility */
     filter:saturate(1.1) contrast(1.05);
     mix-blend-mode:overlay;
   }
@@ -77,10 +77,6 @@
   .brandText{ min-width:0; }
   .brandTitle{ font-weight:1000; font-size:15px; letter-spacing:.3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .brandSub{ font-size:12px; color:var(--muted); }
-
-  .pill{ display:flex; align-items:center; gap:10px; padding:8px 12px; border:1px solid var(--stroke); border-radius:999px; background:rgba(0,0,0,.25); }
-  .dot{ width:10px; height:10px; border-radius:50%; background:var(--bad); box-shadow:0 0 0 4px rgba(255,59,48,.18); }
-  .pillText{ font-size:12px; color:var(--muted); }
 
   .shell{
     flex:1 1 auto; min-height:0;
@@ -143,6 +139,7 @@
     filter:drop-shadow(0 18px 24px rgba(0,0,0,.65));
   }
   svg{ width:var(--wheel); height:var(--wheel); display:block; }
+
   .centerSpin{
     position:absolute; width:var(--centerBtn); height:var(--centerBtn); border-radius:50%;
     border:2px solid rgba(255,255,255,.25);
@@ -164,6 +161,7 @@
     border-radius:22px; background:rgba(14,14,16,.94);
     border:1px solid rgba(255,255,255,.18);
     padding:18px; box-shadow:var(--shadow);
+    text-align:center; /* centered popup */
   }
   .modalTitle{ font-weight:1000; font-size:16px; margin-bottom:8px; }
   .modalBody{ white-space:pre-line; font-size:13px; color:rgba(255,255,255,.82); margin-bottom:14px; }
@@ -189,7 +187,7 @@
         <div class="brandSub">Qualify at <b id="qualText">R0+</b> and spin</div>
       </div>
     </div>
-    <div class="pill" id="onlinePill"><span class="dot"></span><span class="pillText" id="onlineText">Offline</span></div>
+    <!-- Online/offline removed -->
   </header>
 
   <main class="shell">
@@ -228,16 +226,18 @@
           </div>
 
           <div class="row2">
-            <div class="field"><label>Receipt Number</label><input id="wReceipt" autocomplete="off"></div>
+            <div class="field"><label>Receipt Number (max 15)</label><input id="wReceipt" autocomplete="off"></div>
             <div class="field">
-              <label>Basket Amount (R)</label><input id="wAmount" inputmode="decimal" autocomplete="off">
+              <label>Basket Amount (R) (max 10000)</label><input id="wAmount" inputmode="decimal" autocomplete="off">
               <div class="hint">Minimum: <b id="minAmountLabel">R0</b></div>
+              <div class="err" id="errAmount"></div>
             </div>
           </div>
 
           <div class="field">
             <label>Staff PIN</label><input id="wPin" inputmode="numeric" autocomplete="off">
             <div class="hint">Ask cashier for today’s PIN</div>
+            <div class="err" id="errPin"></div>
           </div>
 
           <div class="consentBlock">
@@ -284,7 +284,7 @@
 
 <script>
 /************** EDIT THESE **************/
-const API_URL = "https://script.google.com/macros/s/AKfycby4yd2dwRBlbY6PmzeCuZZd5kPS_qXvZkslqBOevdU-EqWLVlrDQP0-dKcbmnBdjYhh/exec"; // must end with /exec
+const API_URL = "https://script.google.com/macros/s/AKfycbybME2o7vGSQ_DDePT5_WWVbBEpwu5pkm0Cs60hndGMqcvPiK_it-46p9SoGFcF9GPQ/exec"; // must end with /exec
 const STORE_SECRETS = { "CL-001": "HV-SECRET-2025" };
 /***************************************/
 
@@ -300,6 +300,13 @@ function getParam(name){
 function sanitizePhone(raw){ return String(raw||"").replace(/\D+/g,"").slice(0,10); }
 function normalizeEmail(e){ return String(e||"").trim().toLowerCase(); }
 function isValidEmail(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(normalizeEmail(e)); }
+function clampReceipt(r){ return String(r||"").slice(0,15); }
+function clampAmount(a){
+  let n = Number(String(a||"").replace(/[^0-9.]/g,""));
+  if(isNaN(n)) n = 0;
+  if(n > 10000) n = 10000;
+  return n;
+}
 
 function openModal(title, body){
   $("mTitle").innerText = title;
@@ -307,13 +314,6 @@ function openModal(title, body){
   $("modal").classList.remove("hidden");
 }
 function closeModal(){ $("modal").classList.add("hidden"); }
-
-function setOnlineUI(on){
-  const dot = $("onlinePill").querySelector(".dot");
-  $("onlineText").innerText = on ? "Online" : "Offline";
-  dot.style.background = on ? "#34c759" : "#ff3b30";
-  dot.style.boxShadow = on ? "0 0 0 4px rgba(52,199,89,.18)" : "0 0 0 4px rgba(255,59,48,.18)";
-}
 
 function apiJSONP(params, timeoutMs=15000){
   return new Promise((resolve)=>{
@@ -355,7 +355,7 @@ async function apiJSONPWithRetry(params, attempts=2){
     const res = await apiJSONP(params, 15000);
     if(res && res.ok) return res;
     if(!res || (res.error!=="timeout" && res.error!=="network")) return res;
-    await sleep(400 + i*600);
+    await sleep(300 + i*500);
   }
   return { ok:false, error:"timeout", detail:"API timeout after retries" };
 }
@@ -380,10 +380,10 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   drawWheelFallback();
   wireValidation();
 
-  if(!STORE_ID){ setOnlineUI(false); openModal("Missing store","Use URL like:\n?store=CL-001&device=TAB-A9-HIGHVELD-01"); return; }
+  if(!STORE_ID){ openModal("Missing store","Use URL like:\n?store=CL-001&device=TAB-A9-HIGHVELD-01"); return; }
   const secret = STORE_SECRETS[STORE_ID];
-  if(!secret){ setOnlineUI(false); openModal("Missing secret",`No secret configured for ${STORE_ID}`); return; }
-  if(!API_URL.includes("/exec")){ setOnlineUI(false); openModal("Bad API URL","API_URL must be your Apps Script /exec link."); return; }
+  if(!secret){ openModal("Missing secret",`No secret configured for ${STORE_ID}`); return; }
+  if(!API_URL.includes("/exec")){ openModal("Bad API URL","API_URL must be your Apps Script /exec link."); return; }
 
   const res = await apiJSONPWithRetry({
     action:"getconfig",
@@ -392,15 +392,13 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     deviceId:DEVICE_ID
   }, 2);
 
-  if(!res.ok){ setOnlineUI(false); openModal("Setup blocked", `${res.error}\n${res.detail||""}`); return; }
+  if(!res.ok){ openModal("Setup blocked", `${res.error}\n${res.detail||""}`); return; }
   if(!res.prizes || res.prizes.length !== 10){
-    setOnlineUI(false);
     openModal("Prizes misconfigured","You must have exactly 10 active prize rows per store (OrderIndex 1..10).");
     return;
   }
 
   CFG = res;
-  setOnlineUI(true);
 
   $("storeName").innerText = CFG.store.name;
   $("minAmountLabel").innerText = `R${CFG.store.qualifyAmount}`;
@@ -417,6 +415,8 @@ function wireValidation(){
     const el=$(id);
     el.addEventListener(el.type==="checkbox" ? "change" : "input", ()=>{
       if(id==="wPhone") el.value = sanitizePhone(el.value);
+      if(id==="wReceipt") el.value = clampReceipt(el.value);
+      if(id==="wAmount") el.value = String(clampAmount(el.value));
       validateAndUpdate();
     });
   });
@@ -425,6 +425,8 @@ function wireValidation(){
 function validateAndUpdate(){
   $("errEmail").innerText="";
   $("errPhone").innerText="";
+  $("errAmount").innerText="";
+  $("errPin").innerText="";
 
   if(!CFG){
     setStatus("Loading store rules…", false);
@@ -448,7 +450,15 @@ function validateAndUpdate(){
   if(!phone){ $("errPhone").innerText="Phone is required."; setStatus("Phone required", false); $("centerSpin").disabled=true; return; }
   if(phone.length!==10){ $("errPhone").innerText="Phone must be exactly 10 digits."; setStatus("Fix phone to continue", false); $("centerSpin").disabled=true; return; }
 
-  if(!receipt || !amount || !pin){ setStatus("Complete all fields to unlock SPIN", false); $("centerSpin").disabled=true; return; }
+  if(receipt.length===0){ setStatus("Receipt required", false); $("centerSpin").disabled=true; return; }
+  if(receipt.length>15){ setStatus("Receipt max 15 characters", false); $("centerSpin").disabled=true; return; }
+  if(!amount){ setStatus("Basket amount required", false); $("centerSpin").disabled=true; return; }
+  if(amount>10000){ $("errAmount").innerText="Max amount is R10000."; setStatus("Basket max R10000", false); $("centerSpin").disabled=true; return; }
+
+  const pinLen = Number(CFG.constraints?.pinLen || 4);
+  if(!pin){ setStatus("Staff PIN required", false); $("centerSpin").disabled=true; return; }
+  if(pin.length!==pinLen){ $("errPin").innerText=`PIN must be ${pinLen} digits.`; setStatus(`PIN must be ${pinLen} digits`, false); $("centerSpin").disabled=true; return; }
+
   if(!popia || !marketing){ setStatus("POPIA + marketing consent required", false); $("centerSpin").disabled=true; return; }
   if(amount < Number(CFG.store.qualifyAmount)){ setStatus(`Not qualified. Minimum R${CFG.store.qualifyAmount}`, false); $("centerSpin").disabled=true; return; }
 
@@ -473,26 +483,28 @@ function resetFormHard(){
   $("wMarketing").checked=false;
   $("errEmail").innerText="";
   $("errPhone").innerText="";
+  $("errAmount").innerText="";
+  $("errPin").innerText="";
   $("formScroll").scrollTop=0;
   validateAndUpdate();
 }
 
 function drawWheelFallback(){
   drawWheel([
-    {name:"FREE CHIPS"},
-    {name:"TRY AGAIN"},
-    {name:"FREE WINGS"},
-    {name:"TRY AGAIN"},
-    {name:"10% OFF"},
-    {name:"TRY AGAIN"},
-    {name:"FREE DRINK"},
-    {name:"TRY AGAIN"},
-    {name:"GRAND DRAW"},
-    {name:"TRY AGAIN"}
+    {name:"FREE CHIPS", imageUrl:""},
+    {name:"TRY AGAIN", imageUrl:""},
+    {name:"FREE WINGS", imageUrl:""},
+    {name:"TRY AGAIN", imageUrl:""},
+    {name:"10% OFF", imageUrl:""},
+    {name:"TRY AGAIN", imageUrl:""},
+    {name:"FREE DRINK", imageUrl:""},
+    {name:"TRY AGAIN", imageUrl:""},
+    {name:"GRAND DRAW", imageUrl:""},
+    {name:"TRY AGAIN", imageUrl:""}
   ]);
 }
 function drawWheelFromConfig(prizes){
-  drawWheel(prizes.map(p=>({ name:p.name||"TRY AGAIN" })));
+  drawWheel(prizes.map(p=>({ name:p.name||"TRY AGAIN", imageUrl:p.imageUrl||"" })));
 }
 
 // Wedge 0 centered under top pointer
@@ -515,36 +527,50 @@ function drawWheel(wedges){
     svg.appendChild(path);
 
     const label=(wedges[i]?.name||"TRY AGAIN");
+    const imgUrl=(wedges[i]?.imageUrl||"").trim();
     const mid=(start+end)/2;
 
-    const tx=cx + Math.cos(mid)*128;
-    const ty=cy + Math.sin(mid)*128;
-
-    const text=document.createElementNS("http://www.w3.org/2000/svg","text");
-    text.setAttribute("x",tx); text.setAttribute("y",ty);
-    text.setAttribute("text-anchor","middle");
-    text.setAttribute("dominant-baseline","middle");
-    text.setAttribute("font-size","11");
-    text.setAttribute("font-weight","1000");
-    text.setAttribute("fill","#fff");
+    const tx=cx + Math.cos(mid)*126;
+    const ty=cy + Math.sin(mid)*126;
     const rot=(mid*180/Math.PI)+90;
-    text.setAttribute("transform",`rotate(${rot} ${tx} ${ty})`);
 
-    const words=String(label).split(" ");
-    const line1=words.slice(0,2).join(" ").toUpperCase();
-    const line2=words.slice(2).join(" ").toUpperCase();
+    // If image URL is provided, show image instead of text
+    if(imgUrl){
+      const img=document.createElementNS("http://www.w3.org/2000/svg","image");
+      img.setAttribute("href", imgUrl);
+      img.setAttribute("x", tx-22);
+      img.setAttribute("y", ty-22);
+      img.setAttribute("width", 44);
+      img.setAttribute("height", 44);
+      img.setAttribute("preserveAspectRatio", "xMidYMid meet");
+      img.setAttribute("transform", `rotate(${rot} ${tx} ${ty})`);
+      svg.appendChild(img);
+    } else {
+      const text=document.createElementNS("http://www.w3.org/2000/svg","text");
+      text.setAttribute("x",tx); text.setAttribute("y",ty);
+      text.setAttribute("text-anchor","middle");
+      text.setAttribute("dominant-baseline","middle");
+      text.setAttribute("font-size","11");
+      text.setAttribute("font-weight","1000");
+      text.setAttribute("fill","#fff");
+      text.setAttribute("transform",`rotate(${rot} ${tx} ${ty})`);
 
-    const t1=document.createElementNS("http://www.w3.org/2000/svg","tspan");
-    t1.setAttribute("x",tx); t1.textContent=line1;
-    text.appendChild(t1);
+      const words=String(label).split(" ");
+      const line1=words.slice(0,2).join(" ").toUpperCase();
+      const line2=words.slice(2).join(" ").toUpperCase();
 
-    if(line2){
-      const t2=document.createElementNS("http://www.w3.org/2000/svg","tspan");
-      t2.setAttribute("x",tx); t2.setAttribute("dy","12"); t2.textContent=line2;
-      text.appendChild(t2);
+      const t1=document.createElementNS("http://www.w3.org/2000/svg","tspan");
+      t1.setAttribute("x",tx); t1.textContent=line1;
+      text.appendChild(t1);
+
+      if(line2){
+        const t2=document.createElementNS("http://www.w3.org/2000/svg","tspan");
+        t2.setAttribute("x",tx); t2.setAttribute("dy","12"); t2.textContent=line2;
+        text.appendChild(t2);
+      }
+
+      svg.appendChild(text);
     }
-
-    svg.appendChild(text);
   }
 
   const ring=document.createElementNS("http://www.w3.org/2000/svg","circle");
@@ -576,7 +602,12 @@ async function spin(){
   spinning=true;
   $("centerSpin").disabled=true;
 
-  const res = await apiJSONPWithRetry({
+  // INSTANT spin kick (no waiting for API)
+  wheelRotation += (2*360) + (Math.random()*360);
+  $("wheelRotator").style.transform = `rotate(${wheelRotation}deg)`;
+
+  // Backend call in parallel
+  const resPromise = apiJSONPWithRetry({
     action:"spin",
     storeId:STORE_ID,
     storeSecret:STORE_SECRETS[STORE_ID],
@@ -592,15 +623,14 @@ async function spin(){
     cashierPin:$("wPin").value.trim()
   }, 2);
 
+  const res = await resPromise;
+
   if(!res.ok){
-    setOnlineUI(false);
     openModal("Spin blocked", `${res.error}\n${res.detail||""}`);
     spinning=false;
     resetFormHard();
     return;
   }
-
-  setOnlineUI(true);
 
   const idx = (typeof res.wedgeIndex === "number") ? res.wedgeIndex : -1;
   if(!CFG || !CFG.prizes || idx < 0 || idx > 9){
@@ -610,32 +640,30 @@ async function spin(){
     return;
   }
 
-  // Prevent “double spin feeling”
+  // Lock final landing to real wedge
   const currentNorm = norm360(wheelRotation);
   wheelRotation = wheelRotation - currentNorm;
 
-  // Land wedge idx at top pointer
   const targetDeg = -(idx * STEP_DEG);
-  wheelRotation = wheelRotation + (6*360) + targetDeg;
+  wheelRotation = wheelRotation + (5*360) + targetDeg;
   $("wheelRotator").style.transform = `rotate(${wheelRotation}deg)`;
 
   await sleep(3900);
 
-  // Message MUST match wedge index result
   const wedge = CFG.prizes[idx];
   const prizeName = wedge.name || res.prizeName || "TRY AGAIN";
   const prizeType = (wedge.type || res.prizeType || "lose").toLowerCase();
 
   if(prizeType==="win"){
-    openModal("🍗 SOUL GOOD! YOU WON!", `Prize: ${prizeName}\n\nCode: ${res.prizeCode||""}\n\nWe emailed your code.\nKeep your receipt.`);
+    openModal("🍗 SOUL GOOD! YOU WON!", `Prize: ${prizeName}\n\nCode: ${res.prizeCode||""}\n\nCheck your email for your code.\nKeep your receipt.`);
   } else if(prizeType==="draw"){
-    openModal("🔥 YOU’RE IN THE DRAW!", `Entry: ${prizeName}\n\nEntry Code: ${res.prizeCode||""}\n\nWe emailed your code.\nDrop your receipt in the box.`);
+    openModal("🔥 YOU’RE IN THE DRAW!", `Entry: ${prizeName}\n\nEntry Code: ${res.prizeCode||""}\n\nCheck your email for your code.\nDrop your receipt in the box.`);
   } else {
     openModal("😅 NOT THIS TIME…", `No prize on this spin.\n\nSpend R${res.qualifyAmount}+ again to qualify.\nMore chicken = more chances. 🍗`);
   }
 
   spinning=false;
-  resetFormHard(); // forces re-entry to prevent spam
+  resetFormHard();
 }
 </script>
 </body>
